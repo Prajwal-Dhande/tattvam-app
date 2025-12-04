@@ -1,0 +1,82 @@
+[
+  {
+    "product_id": "P001",
+    "barcode": "8901058845619",
+    "product_name": "Maggi 2-Minute Noodles Masala",
+    "product_brand": "Nestle",
+    "ingredients": "Refined Wheat Flour, Palm Oil, Salt, Sugar, Hydrolysed Groundnut Protein, Onion Powder, Spices & Condiments...",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/105/884/5619/front_en.3.400.jpg"
+  },
+  {
+    "product_id": "P002",
+    "barcode": "8904000000439",
+    "product_name": "Amul Taaza Toned Milk",
+    "product_brand": "Amul",
+    "ingredients": "Toned Milk, Vitamin A, Vitamin D",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/400/000/0439/front_en.4.400.jpg"
+  },
+  {
+    "product_id": "P003",
+    "barcode": "8901030571712",
+    "product_name": "Parle-G Original Glucose Biscuits",
+    "product_brand": "Parle",
+    "ingredients": "Wheat Flour, Sugar, Edible Vegetable Oils, Invert Sugar Syrup, Salt, Leavening Agents...",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/103/057/1712/front_en.6.400.jpg"
+  },
+  {
+    "product_id": "P004",
+    "barcode": "8906007285051",
+    "product_name": "Britannia Milk Bikis",
+    "product_brand": "Britannia",
+    "ingredients": "Wheat Flour, Sugar, Edible Vegetable Oil, Milk Solids, Salt, Malt Extract...",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/600/728/5051/front_en.8.400.jpg"
+  },
+  {
+    "product_id": "P005",
+    "barcode": "8901262010478",
+    "product_name": "Tropicana 100% Orange Juice",
+    "product_brand": "Tropicana",
+    "ingredients": "Orange Juice (100%)",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/126/201/0478/front_en.3.400.jpg"
+  },
+  {
+    "product_id": "P006",
+    "barcode": "8901030739013",
+    "product_name": "Dabur Honey",
+    "product_brand": "Dabur",
+    "ingredients": "Pure Honey",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/103/073/9013/front_en.5.400.jpg"
+  },
+  {
+    "product_id": "P007",
+    "barcode": "8901719101015",
+    "product_name": "Colgate Strong Teeth Toothpaste",
+    "product_brand": "Colgate",
+    "ingredients": "Calcium Carbonate, Sorbitol, Water, Silica, Sodium Lauryl Sulfate, Flavor...",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/171/910/1015/front_en.4.400.jpg"
+  },
+  {
+    "product_id": "P008",
+    "barcode": "8901030737897",
+    "product_name": "Dabur Red Toothpaste",
+    "product_brand": "Dabur",
+    "ingredients": "Clove Oil, Pudina, Sunthi, Tomar Beej, Laung, Peppermint...",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/103/073/7897/front_en.9.400.jpg"
+  },
+  {
+    "product_id": "P009",
+    "barcode": "8906007286072",
+    "product_name": "Britannia Good Day Butter",
+    "product_brand": "Britannia",
+    "ingredients": "Wheat Flour, Sugar, Edible Vegetable Oil, Butter, Milk Solids, Salt...",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/600/728/6072/front_en.16.400.jpg"
+  },
+  {
+    "product_id": "P010",
+    "barcode": "8901030360330",
+    "product_name": "KitKat 2 Finger Chocolate",
+    "product_brand": "Nestle",
+    "ingredients": "Sugar, Wheat Flour, Milk Solids, Cocoa Butter, Cocoa Solids, Emulsifiers...",
+    "image_url": "https://images.openfoodfacts.org/images/products/890/103/036/0330/front_en.4.400.jpg"
+  }
+]
