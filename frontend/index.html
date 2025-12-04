@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>NutriScan - India's Food Intelligence</title>
+    <title>Tattvam - Know Your Food</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -56,9 +56,18 @@
                 <div class="flex items-center gap-3">
                     <button id="back-button" class="hidden w-10 h-10 rounded-full flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50"><i class="fas fa-arrow-left"></i></button>
                     <div id="header-logo" class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primaryDark flex items-center justify-center text-white shadow-lg"><i class="fas fa-leaf text-xl"></i></div>
-                        <h1 class="text-xl font-bold text-dark dark:text-light">NutriScan</h1>
-                    </div>
+    <div class="relative w-10 h-10 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl shadow-lg">
+        <i class="fas fa-leaf text-white text-lg absolute -top-1 -right-1 opacity-80"></i>
+        <i class="fas fa-search text-white text-xl relative z-10"></i>
+    </div>
+    
+    <div class="flex flex-col">
+        <h1 class="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-800 dark:from-emerald-400 dark:to-teal-200 leading-none">
+            Tattvam
+        </h1>
+        <span class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Pure Food</span>
+    </div>
+</div>
                     <h2 id="header-title" class="text-xl font-bold text-dark dark:text-light hidden"></h2>
                 </div>
                 <div class="flex items-center gap-2">
@@ -91,9 +100,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const API_BASE_URL = 'http://localhost:5000';
+            const API_BASE_URL = 'https://tattvam-app.onrender.com';
             let html5QrCode;
             let currentBarcode = null;
+            
 
             const sections = document.querySelectorAll('main > section');
             const navItems = document.querySelectorAll('.nav-item');
@@ -710,16 +720,16 @@ function startScanner() {
         💡 <b>Tip:</b> Check sodium levels on instant noodles.
     </div>
 
-    <div class="relative h-64 rounded-2xl shadow-lg bg-black overflow-hidden flex items-center justify-center">
-        
-        <div id="scanner-viewport" class="absolute inset-0 w-full h-full z-0"></div>
+    <div class="h-64 rounded-2xl shadow-lg relative bg-gray-900 flex items-center justify-center overflow-hidden">
+    <div id="scanner-viewport" class="absolute inset-0"></div>
+    
 
         <button id="start-scan-btn"
-    class="z-20 bg-white text-emerald-600 font-bold py-3 px-6 rounded-full shadow-lg flex items-center gap-2 transform transition hover:scale-105">
-    <i class="fas fa-camera"></i> Start Camera
-</button>
+            class="z-10 bg-white dark:bg-dark text-dark dark:text-light font-bold py-3 px-6 rounded-lg flex items-center gap-2 shadow-lg">
+            <i class="fas fa-camera text-primary"></i> Start Scanning
+        </button>
 
-        <p class="absolute bottom-4 left-0 right-0 text-center text-white/90 text-xs font-medium z-10 pointer-events-none">
+        <p class="absolute bottom-2 text-white text-xs font-semibold bg-black/50 px-2 py-1 rounded-lg">
             Place barcode inside the frame
         </p>
     </div>
@@ -731,29 +741,45 @@ function startScanner() {
 
     <div>
         <h3 class="font-bold text-lg mb-3">🔥 Trending in Nagpur</h3>
+
         <div class="flex overflow-x-auto gap-3 pb-3 -mb-3">
         ${
             trendingProducts.length === 0
             ? `<p class="text-gray-500 text-sm ml-2">No trending products</p>`
             : trendingProducts.map(p => {
-                const imgSrc = buildImageUrl(p.imageUrl || p.image_url || p.productImage);
+
+                // ⭐ Clean unified image handling
+                const imgSrc = buildImageUrl(
+                    p.imageUrl || p.image_url || p.productImage
+                );
+
+                // ⭐ Clean name + brand
                 const name = p.name || "Unnamed";
                 const brand = p.brand || p.product_brand || "Brand";
+
+                // ⭐ Safe rating
                 const rating = Math.max(0, Math.min(5, Number(p.rating) || 0));
 
                 return `
                 <div class="trending-item flex-shrink-0 w-36 glass-effect p-3 rounded-2xl shadow-card cursor-pointer"
                      data-barcode="${p.barcode}">
-                    <img src="${imgSrc}" class="w-full h-24 object-contain rounded-xl bg-white dark:bg-gray-700 p-1 mb-2">
+                    
+                    <img src="${imgSrc}" 
+                         alt="${name}" 
+                         class="w-full h-24 object-contain rounded-xl bg-white dark:bg-gray-700 p-1 mb-2">
+
                     <p class="font-bold text-xs truncate">${name}</p>
                     <p class="text-[10px] text-gray-500 truncate">${brand}</p>
+
                     <div class="text-yellow-400 text-xs mt-1">${generateStarRating(rating)}</div>
-                </div>`;
+                </div>
+                `;
             }).join('')
         }
         </div>
     </div>
 </div>`;
+
 
 
             const createLoginPromptHTML = () => `<div class="text-center py-10 fade-in"><i class="fas fa-lock text-4xl text-gray-400 mb-4"></i><h3 class="text-xl font-bold">Login Required</h3><p class="text-gray-500 mb-4">Log in to use this feature.</p><button onclick="navigateTo('settings-section')" class="bg-primary text-white font-bold py-2 px-6 rounded-lg">Go to Settings</button></div>`;
