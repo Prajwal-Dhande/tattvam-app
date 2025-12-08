@@ -2,250 +2,320 @@
 <html lang="en" class="light">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+    <meta name="theme-color" content="#00C897">
     <title>Tattvam - Know Your Food</title>
+    
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" sizes="192x192" href="logo.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: { 
-                        primary: '#00C897', primaryDark: '#019A75', dark: '#1E293B', light: '#F8FAFC',
+                        primary: '#00C897', 
+                        primaryDark: '#019A75', 
+                        dark: '#0f172a', 
+                        light: '#F8FAFC',
+                        tattvamGreen: '#008f5d'
                     },
-                    boxShadow: { card: '0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.04)', glass: '0 4px 30px rgba(0, 0, 0, 0.1)' }
+                    boxShadow: { 
+                        card: '0 10px 30px -5px rgba(0, 0, 0, 0.05)', 
+                        glass: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
+                    },
+                    animation: { 'spin-slow': 'spin 3s linear infinite', 'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
                 }
             }
         }
     </script>
 
     <style>
+        body { 
+            overscroll-behavior-y: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        .page-hidden { display: none; }
-        .glass-effect { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .dark .glass-effect { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); }
-        body::-webkit-scrollbar { display: none; }
-        .skeleton { background-color: #e2e8f0; background-image: linear-gradient(90deg, #e2e8f0, #f8fafc, #e2e8f0); background-size: 1000px 100%; animation: shimmer 2s infinite; }
-        .dark .skeleton { background-color: #334155; background-image: linear-gradient(90deg, #334155, #475569, #334155); }
-        button:active, .nav-item:active { transform: scale(0.95); transition: transform 0.1s; }
-        .bg-main-gradient { background: linear-gradient(170deg, #F0FDF4, #F0F9FF, #FFFFFF); }
-        .dark .bg-main-gradient { background: linear-gradient(170deg, #16241b, #1E293B, #1E293B); }
-        /* Force the video to fill the container and flip it like a mirror */
-#scanner-viewport video { 
-    width: 100% !important; 
-    height: 100% !important; 
-    object-fit: cover; 
-    border-radius: 1rem; 
-}
-        /* Star colors: ensures empty stars are grey and filled are yellow */
-        .fa-star, .fa-star-half-alt { color: #f59e0b; }
-        .far.fa-star { color: #d1d5db; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .page-hidden { display: none !important; }
+
+        /* Glass Header */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .dark .glass-header {
+            background: rgba(15, 23, 42, 0.92);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Glass Cards */
+        .glass-effect { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px); 
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+        }
+        .dark .glass-effect { 
+            background: rgba(15, 23, 42, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+
+        /* Scanner */
+        .scanner-laser {
+            position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(to right, transparent, #00C897, transparent);
+            box-shadow: 0 0 15px #00C897;
+            animation: scan-move 2s linear infinite;
+            z-index: 20; display: none;
+        }
+        @keyframes scan-move { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        /* Loader */
+        .loading-overlay {
+            position: fixed; inset: 0; z-index: 999;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .dark .loading-overlay { background: rgba(15, 23, 42, 0.95); }
+        .loading-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .loader-spinner {
+            width: 50px; height: 50px;
+            border: 4px solid #e2e8f0; border-top: 4px solid #00C897;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        .dark .loader-spinner { border-color: #334155; border-top-color: #00C897; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Install Banner */
+        #install-banner { display: none; }
+        #install-banner.show { display: flex; }
+
+        /* Video Fix */
+        #scanner-viewport video { width: 100% !important; height: 100% !important; object-fit: cover; border-radius: 1.5rem; }
+        
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .pt-safe { padding-top: env(safe-area-inset-top); }
+        
+        .fa-star, .fa-star-half-alt { color: #fbbf24; }
+        .far.fa-star { color: #cbd5e1; }
     </style>
 </head>
-<body class="font-sans">
-    <div class="max-w-md mx-auto min-h-screen shadow-2xl overflow-x-hidden bg-main-gradient text-gray-800 dark:text-gray-200">
-        <header class="glass-effect sticky top-0 z-50 p-4">
+<body class="font-sans bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 min-h-[100dvh] flex flex-col">
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader-spinner mb-4"></div>
+        <div class="text-primary font-bold tracking-widest text-sm animate-pulse">ANALYZING PURITY...</div>
+    </div>
+
+    <div id="install-banner" class="fixed bottom-24 left-4 right-4 z-50 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl items-center justify-between animate-bounce">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                <i class="fas fa-arrow-down text-white"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm">Install Tattvam</h4>
+                <p class="text-xs text-gray-400">Add to Home Screen</p>
+            </div>
+        </div>
+        <button id="install-btn-banner" class="bg-primary hover:bg-primaryDark px-4 py-2 rounded-lg text-xs font-bold transition">Install</button>
+        <button onclick="document.getElementById('install-banner').classList.remove('show')" class="absolute -top-2 -right-2 bg-gray-600 rounded-full w-6 h-6 flex items-center justify-center text-xs border border-white">&times;</button>
+    </div>
+
+    <div class="w-full md:max-w-md md:mx-auto bg-gray-50 dark:bg-gray-950 shadow-2xl min-h-[100dvh] flex flex-col relative">
+        
+        <header class="glass-header sticky top-0 z-40 px-5 py-4 pt-safe transition-all duration-300">
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <button id="back-button" class="hidden w-10 h-10 rounded-full flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50"><i class="fas fa-arrow-left"></i></button>
+                <div class="flex items-center gap-4">
+                    <button id="back-button" class="hidden w-10 h-10 rounded-full active:scale-95 transition flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <i class="fas fa-arrow-left text-lg"></i>
+                    </button>
+                    
                     <div id="header-logo" class="flex items-center gap-3">
-    <div class="relative w-10 h-10 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl shadow-lg">
-        <i class="fas fa-leaf text-white text-lg absolute -top-1 -right-1 opacity-80"></i>
-        <i class="fas fa-search text-white text-xl relative z-10"></i>
-    </div>
-    
-    <div class="flex flex-col">
-        <h1 class="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-800 dark:from-emerald-400 dark:to-teal-200 leading-none">
-            Tattvam
-        </h1>
-        <span class="text-[10px] font-semibold text-gray-400 tracking-widest uppercase">Pure Food</span>
-    </div>
-</div>
-                    <h2 id="header-title" class="text-xl font-bold text-dark dark:text-light hidden"></h2>
+                        <div class="relative w-11 h-11 flex items-center justify-center bg-gradient-to-br from-[#00C897] to-[#008f5d] rounded-2xl shadow-lg shadow-emerald-500/20 group">
+                            <i class="fas fa-search text-white text-lg relative z-10 transform -translate-x-[1px]"></i>
+                            <i class="fas fa-leaf text-white text-[10px] absolute top-2.5 right-2.5 z-20 opacity-90 transform rotate-12"></i>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <h1 class="text-2xl font-black tracking-tight text-tattvamGreen dark:text-primary leading-none">Tattvam</h1>
+                            <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.25em] leading-tight pt-1">Pure Food</span>
+                        </div>
+                    </div>
+                    <h2 id="header-title" class="text-xl font-bold hidden truncate text-gray-800 dark:text-white"></h2>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button id="dark-mode-toggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50"><i class="fas fa-sun"></i></button>
-                    <button id="notification-button" class="relative w-10 h-10 rounded-full flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50"><i class="fas fa-bell"></i></button>
-                    <button id="settings-button-header" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50"><i class="fas fa-cog"></i></button>
+                    <button id="dark-mode-toggle" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition active:scale-90">
+                        <i class="fas fa-moon text-lg"></i>
+                    </button>
+                    <button id="settings-button-header" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition active:scale-90">
+                        <i class="fas fa-cog text-lg"></i>
+                    </button>
                 </div>
             </div>
         </header>
 
-        <main class="pb-24">
-            <section id="scanner-section" class="p-4"></section>
-            <section id="product-section" class="p-4 page-hidden"></section>
-            <section id="explore-section" class="p-4 page-hidden"></section>
-            <section id="history-section" class="p-4 page-hidden"></section>
-            <section id="progress-section" class="p-4 page-hidden"></section>
-            <section id="settings-section" class="p-4 page-hidden"></section>
+        <main class="flex-1 overflow-y-auto pb-28 px-5 pt-6 scroll-smooth" id="main-content-area">
+            <section id="scanner-section" class="w-full"></section>
+            <section id="product-section" class="w-full page-hidden"></section>
+            <section id="explore-section" class="w-full page-hidden"></section>
+            <section id="history-section" class="w-full page-hidden"></section>
+            <section id="progress-section" class="w-full page-hidden"></section>
+            <section id="settings-section" class="w-full page-hidden"></section>
         </main>
 
-        <nav class="glass-effect fixed bottom-4 left-1/2 -translate-x-1/2 flex justify-around p-2 rounded-2xl shadow-glass w-[95%] max-w-sm">
-            <button class="nav-item flex flex-col items-center p-2 rounded-xl w-full transition" data-target="scanner-section"><i class="fas fa-qrcode text-xl text-green-500"></i><span class="text-xs font-semibold text-gray-500">Scan</span></button>
-            <button class="nav-item flex flex-col items-center p-2 rounded-xl w-full transition" data-target="history-section"><i class="fas fa-history text-xl text-blue-500"></i><span class="text-xs font-semibold text-gray-500">History</span></button>
-            <button class="nav-item flex flex-col items-center p-2 rounded-xl w-full transition" data-target="explore-section"><i class="fas fa-compass text-xl text-orange-500"></i><span class="text-xs font-semibold text-gray-500">Explore</span></button>
-            <button class="nav-item flex flex-col items-center p-2 rounded-xl w-full transition" data-target="progress-section"><i class="fas fa-chart-line text-xl text-purple-500"></i><span class="text-xs font-semibold text-gray-500">Progress</span></button>
+        <nav class="glass-effect fixed bottom-6 left-5 right-5 md:left-1/2 md:-translate-x-1/2 md:w-[400px] rounded-3xl shadow-glass z-50 pb-safe border border-white/50 dark:border-gray-700/50 backdrop-blur-xl">
+            <div class="flex justify-around items-center p-2.5">
+                <button class="nav-item flex-1 flex flex-col items-center py-2 rounded-2xl active:scale-95 transition duration-200 group" data-target="scanner-section">
+                    <div class="w-10 h-6 mb-1 rounded-full flex items-center justify-center group-[.nav-active]:bg-primary/10 transition-colors">
+                        <i class="fas fa-qrcode text-lg text-gray-400 group-[.nav-active]:text-primary transition-colors"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 group-[.nav-active]:text-primary transition-colors">Scan</span>
+                </button>
+                <button class="nav-item flex-1 flex flex-col items-center py-2 rounded-2xl active:scale-95 transition duration-200 group" data-target="history-section">
+                    <div class="w-10 h-6 mb-1 rounded-full flex items-center justify-center group-[.nav-active]:bg-blue-500/10 transition-colors">
+                        <i class="fas fa-history text-lg text-gray-400 group-[.nav-active]:text-blue-500 transition-colors"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 group-[.nav-active]:text-blue-500 transition-colors">History</span>
+                </button>
+                <button class="nav-item flex-1 flex flex-col items-center py-2 rounded-2xl active:scale-95 transition duration-200 group" data-target="explore-section">
+                    <div class="w-10 h-6 mb-1 rounded-full flex items-center justify-center group-[.nav-active]:bg-orange-500/10 transition-colors">
+                        <i class="fas fa-compass text-lg text-gray-400 group-[.nav-active]:text-orange-500 transition-colors"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 group-[.nav-active]:text-orange-500 transition-colors">Explore</span>
+                </button>
+                <button class="nav-item flex-1 flex flex-col items-center py-2 rounded-2xl active:scale-95 transition duration-200 group" data-target="progress-section">
+                    <div class="w-10 h-6 mb-1 rounded-full flex items-center justify-center group-[.nav-active]:bg-purple-500/10 transition-colors">
+                        <i class="fas fa-chart-line text-lg text-gray-400 group-[.nav-active]:text-purple-500 transition-colors"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 group-[.nav-active]:text-purple-500 transition-colors">Progress</span>
+                </button>
+            </div>
         </nav>
     </div>
 
-    <div id="modal-container" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4"></div>
-    <div id="toast-container" class="fixed top-5 right-5 z-[110] space-y-2"></div>
+    <div id="modal-container" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity"></div>
+    <div id="toast-container" class="fixed top-24 left-1/2 -translate-x-1/2 z-[110] space-y-2 w-full max-w-xs pointer-events-none"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const API_BASE_URL = 'https://tattvam-app.onrender.com';
             let html5QrCode;
             let currentBarcode = null;
+            let scannerStartPromise = null;
+            let currentSection = 'scanner-section';
             
+            // PWA Install Logic
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('service-worker.js')
+                        .then(reg => console.log('Service Worker Registered'))
+                        .catch(err => console.log('Service Worker Failed', err));
+                });
+            }
+
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const banner = document.getElementById('install-banner');
+                if(banner) banner.classList.add('show');
+            });
+
+            document.getElementById('install-btn-banner')?.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    document.getElementById('install-banner').classList.remove('show');
+                }
+            });
+
+            window.installApp = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt = null;
+                } else {
+                    showToast('App is installed or not supported.', 'info');
+                }
+            };
 
             const sections = document.querySelectorAll('main > section');
             const navItems = document.querySelectorAll('.nav-item');
-            const scannerSection = document.getElementById('scanner-section');
-            const productSection = document.getElementById('product-section');
             const modalContainer = document.getElementById('modal-container');
             const backButton = document.getElementById('back-button');
             const headerLogo = document.getElementById('header-logo');
             const headerTitle = document.getElementById('header-title');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const mainContentArea = document.getElementById('main-content-area'); // New reference for scrolling
 
             function initializeApp() {
                 setupEventListeners();
                 initializeTheme();
-                navigateTo('scanner-section', true);
+                history.replaceState({ section: 'scanner-section' }, '', '');
+                renderPage('scanner-section');
+                window.addEventListener('popstate', (event) => {
+                    if (event.state && event.state.section) renderPage(event.state.section, false);
+                    else renderPage('scanner-section', false);
+                });
             }
 
-            function setupEventListeners() {
-                navItems.forEach(item => item.addEventListener('click', (e) => navigateTo(e.currentTarget.dataset.target)));
-                document.getElementById('dark-mode-toggle').addEventListener('click', toggleTheme);
-                document.getElementById('notification-button').addEventListener('click', showNotificationModal);
-                document.getElementById('settings-button-header').addEventListener('click', () => navigateTo('settings-section'));
-                backButton.addEventListener('click', () => navigateTo('scanner-section'));
+            function navigateTo(targetId) {
+                if (currentSection === targetId) return;
+                history.pushState({ section: targetId }, '', '');
+                renderPage(targetId);
             }
 
-            async function fetchApi(endpoint, options = {}) {
-                const userInfo = getUserInfo();
-                if (endpoint.includes('/scans') && (!userInfo || !userInfo.token)) {
-                     return null;
-                }
-
-                const headers = { ...options.headers };
-                if (userInfo && userInfo.token) {
-                    headers['Authorization'] = `Bearer ${userInfo.token}`;
-                }
-
-                if (!(options.body instanceof FormData)) {
-                    headers['Content-Type'] = 'application/json';
-                }
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api${endpoint}`, { ...options, headers });
-                    if (response.status === 401) {
-                        logout();
-                        return null;
-                    }
-                    return response;
-                } catch (error) {
-                    console.error("API Error:", error);
-                    return null;
-                }
-            }
-
-            async function fetchProductData(barcode) {
-                if (!barcode || !barcode.trim()) { showToast('Barcode cannot be empty.', 'error'); return; }
-
-                navigateTo('product-section');
-                productSection.innerHTML = createSkeletonLoaderHTML();
-                currentBarcode = barcode;
-
-                const response = await fetchApi(`/products/${barcode}`);
-
-                if (!response) {
-                    setTimeout(() => navigateTo('scanner-section'), 500);
-                    return;
-                }
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    renderProductInfo(data);
-
-                    // Background history save: only if user is logged in AND barcode exists
-                    try {
-    const userInfo = getUserInfo();
-    if (userInfo && userInfo.token && data && data.barcode) {
-        fetchApi('/scans', {
-            method: 'POST',
-            // OLD LINE (CAUSED THE ERROR):
-            // body: JSON.stringify({ barcode: data.barcode }) 
-            
-            // NEW FIXED LINE: Send the whole data object as 'product'
-            body: JSON.stringify({ 
-                barcode: data.barcode,
-                product: data 
-            })
-        }).then(res => {
-            if (res && !res.ok) console.warn("History save failed (Error), but product displayed.");
-        });
-    }
-} catch (err) {
-    console.warn("Background history save error:", err);
-}
-
-                } else {
-                    let errorMessage = `Product lookup failed.`;
-                    try { const errorData = await response.json(); errorMessage = errorData.message || errorMessage; } catch (e) {}
-
-                    if (response.status === 404) {
-                        showToast("Product not found in database.", 'info');
-                        showAddProductForm();
-                    } else {
-                        showToast(errorMessage, 'error');
-                        setTimeout(() => navigateTo('scanner-section'), 1500);
-                    }
-                }
-            }
-
-            function updateHeader(title) {
-                if (title) {
-                    headerLogo.classList.add('hidden');
-                    headerTitle.textContent = title;
-                    headerTitle.classList.remove('hidden');
-                    backButton.classList.remove('hidden');
-                } else {
-                    headerLogo.classList.remove('hidden');
-                    headerTitle.classList.add('hidden');
-                    backButton.classList.add('hidden');
-                }
-            }
-
-            function navigateTo(targetId, isInitialLoad = false) {
-                window.navigateTo = navigateTo;
-                if (html5QrCode?.isScanning) stopScanner();
+            function renderPage(targetId) {
+                currentSection = targetId;
+                if (targetId !== 'scanner-section' && html5QrCode?.isScanning) stopScanner();
 
                 sections.forEach(s => s.classList.add('page-hidden'));
                 const targetSection = document.getElementById(targetId);
-                if (targetSection) targetSection.classList.remove('page-hidden');
-
-                if (!isInitialLoad && targetSection) targetSection.classList.add('fade-in');
+                if (targetSection) {
+                    targetSection.classList.remove('page-hidden');
+                    targetSection.classList.add('fade-in');
+                    
+                    // === BUG FIX: FORCE SCROLL TO TOP ===
+                    if(mainContentArea) mainContentArea.scrollTop = 0;
+                    window.scrollTo(0, 0);
+                }
 
                 navItems.forEach(n => {
                     const isTarget = n.dataset.target === targetId;
                     n.classList.toggle('nav-active', isTarget);
-                    n.querySelector('span').classList.toggle('text-gray-500', !isTarget);
                 });
 
                 const pageTitles = {
-                    'settings-section': 'Settings', 'history-section': 'Scan History',
-                    'explore-section': 'Explore', 'progress-section': 'Your Progress',
-                    'product-section': 'Product Details'
+                    'settings-section': 'Settings', 'history-section': 'History',
+                    'explore-section': 'Explore', 'progress-section': 'Progress', 'product-section': 'Details'
                 };
-                updateHeader(pageTitles[targetId] || null);
+                
+                if (targetId === 'scanner-section') {
+                    headerLogo.classList.remove('hidden');
+                    headerTitle.classList.add('hidden');
+                    backButton.classList.add('hidden');
+                } else {
+                    headerLogo.classList.add('hidden');
+                    headerTitle.textContent = pageTitles[targetId] || 'Tattvam';
+                    headerTitle.classList.remove('hidden');
+                    backButton.classList.remove('hidden');
+                }
 
                 const renderMap = {
                     'scanner-section': renderScanner, 'history-section': renderHistory,
@@ -255,544 +325,363 @@
                 renderMap[targetId]?.();
             }
 
-            function renderProductInfo(product) { productSection.innerHTML = createProductDetailHTML(product); }
+            function setupEventListeners() {
+                navItems.forEach(item => item.addEventListener('click', (e) => navigateTo(e.currentTarget.dataset.target)));
+                document.getElementById('dark-mode-toggle').addEventListener('click', toggleTheme);
+                document.getElementById('settings-button-header').addEventListener('click', () => navigateTo('settings-section'));
+                backButton.addEventListener('click', () => window.history.back());
+            }
+
+            async function fetchApi(endpoint, options = {}) {
+                const userInfo = getUserInfo();
+                const headers = { ...options.headers };
+                if (userInfo?.token) headers['Authorization'] = `Bearer ${userInfo.token}`;
+                if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api${endpoint}`, { ...options, headers });
+                    if (response.status === 401) { logout(); return null; }
+                    return response;
+                } catch (error) { console.error("API Error:", error); return null; }
+            }
+
+            async function fetchProductData(barcode) {
+                if (!barcode?.trim()) { showToast('Invalid barcode', 'error'); return; }
+                loadingOverlay.classList.add('active');
+                const response = await fetchApi(`/products/${barcode}`);
+                loadingOverlay.classList.remove('active');
+                if (!response) return; 
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('product-section').innerHTML = createProductDetailHTML(data);
+                    navigateTo('product-section');
+                    currentBarcode = barcode;
+                    const userInfo = getUserInfo();
+                    if (userInfo?.token) fetchApi('/scans', { method: 'POST', body: JSON.stringify({ barcode: data.barcode, product: data }) });
+                } else {
+                    if (response.status === 404) {
+                        currentBarcode = barcode;
+                        showToast("Product not found.", 'info');
+                        showAddProductForm();
+                    } else showToast("Error fetching product", 'error');
+                }
+            }
+
+            function startScanner() {
+                if (!html5QrCode) html5QrCode = new Html5Qrcode("scanner-viewport");
+                const startBtn = document.getElementById('start-scan-btn');
+                const laser = document.getElementById('scanner-laser');
+                if (startBtn) startBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Starting...`;
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                const onScanSuccess = (decodedText) => {
+                    if (laser) laser.style.display = 'none';
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    if (scannerStartPromise) {
+                        scannerStartPromise.then(() => {
+                            if (html5QrCode.isScanning) {
+                                html5QrCode.stop().then(() => {
+                                    html5QrCode.clear();
+                                    fetchProductData(decodedText);
+                                });
+                            }
+                        });
+                    }
+                };
+                scannerStartPromise = html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+                    .then(() => {
+                        if (startBtn) startBtn.classList.add('hidden');
+                        if (laser) laser.style.display = 'block';
+                    })
+                    .catch((err) => {
+                        return html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)
+                            .then(() => {
+                                if (startBtn) startBtn.classList.add('hidden');
+                                if (laser) laser.style.display = 'block';
+                            });
+                    })
+                    .catch((err) => {
+                        alert(`Camera Error: ${err}`);
+                        if (startBtn) {
+                            startBtn.innerHTML = `<i class="fas fa-camera"></i> Retry Camera`;
+                            startBtn.classList.remove('hidden'); 
+                        }
+                    });
+            }
+
+            function stopScanner() {
+                const laser = document.getElementById('scanner-laser');
+                if (laser) laser.style.display = 'none';
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.stop().then(() => {
+                        html5QrCode.clear();
+                        const startBtn = document.getElementById('start-scan-btn');
+                        if (startBtn) {
+                            startBtn.innerHTML = `<i class="fas fa-camera text-primary"></i> Tap to Scan`;
+                            startBtn.classList.remove('hidden');
+                        }
+                    }).catch(e => console.log(e));
+                }
+            }
 
             async function renderScanner() {
-                // If not logged in, show login prompt and return
-                if (!getUserInfo()) {
-                    scannerSection.innerHTML = createLoginPromptHTML();
-                    return;
-                }
-
-                // Render empty first, then fetch trending
+                const scannerSection = document.getElementById('scanner-section');
+                if (!getUserInfo()) { scannerSection.innerHTML = createLoginPromptHTML(); return; }
                 scannerSection.innerHTML = createScannerHTML([]);
-
-                const response = await fetchApi('/products/trending');
-                let trendingProducts = [];
-
-                if (response && response.ok) {
-                    trendingProducts = await response.json();
-                }
-
-                scannerSection.innerHTML = createScannerHTML(trendingProducts);
-
                 document.getElementById('start-scan-btn').addEventListener('click', startScanner);
-                const manualBtn = document.getElementById('manual-entry-btn');
-                if (manualBtn) manualBtn.addEventListener('click', showManualEntryModal);
-                document.querySelectorAll('.trending-item').forEach(item => {
-                    item.addEventListener('click', () => fetchProductData(item.dataset.barcode));
-                });
-            }
-
-            async function renderHistory() {
-                const historySection = document.getElementById('history-section');
-                if (!getUserInfo()) { historySection.innerHTML = createLoginPromptHTML(); return; }
-                historySection.innerHTML = createSkeletonLoaderHTML();
-                const response = await fetchApi('/scans/my');
-                if (!response || !response.ok) { historySection.innerHTML = createEmptyStateHTML('Could not load history.'); return; }
-                const historyData = await response.json();
-                if (historyData.length === 0) { historySection.innerHTML = createEmptyStateHTML('Your scan history is empty.'); return; }
-
-                historySection.innerHTML = `<div id="history-list-container" class="space-y-3 p-4"></div>`;
-                const container = document.getElementById('history-list-container');
-                historyData.forEach((p, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'glass-effect flex gap-4 p-3 rounded-2xl shadow-card cursor-pointer transition hover:bg-primary/10 item-stagger';
-                    item.style.animationDelay = `${index * 80}ms`;
-                    item.innerHTML = createHistoryItemHTML(p);
-                    item.addEventListener('click', () => fetchProductData(p.barcode));
-                    container.appendChild(item);
-                });
-            }
-
-            function renderExplore() { document.getElementById('explore-section').innerHTML = createEmptyStateHTML('Explore feature coming soon!'); }
-            function renderProgress() { document.getElementById('progress-section').innerHTML = createEmptyStateHTML('Progress tracking coming soon!'); }
-
-            async function renderSettings() {
-                const settingsSection = document.getElementById('settings-section');
-                const userInfo = getUserInfo();
-                settingsSection.innerHTML = createSettingsHTML(userInfo);
-                if (userInfo) {
-                    document.getElementById('logout-btn').addEventListener('click', logout);
-                } else {
-                    document.getElementById('login-register-btn').addEventListener('click', showLoginModal);
+                document.getElementById('manual-entry-btn').addEventListener('click', showManualEntryModal);
+                const response = await fetchApi('/products/trending');
+                if (response?.ok) {
+                    const trending = await response.json();
+                    const trendingContainer = document.getElementById('trending-container');
+                    if (trendingContainer) trendingContainer.innerHTML = createTrendingListHTML(trending);
+                    document.querySelectorAll('.trending-item').forEach(item => {
+                        item.addEventListener('click', () => fetchProductData(item.dataset.barcode));
+                    });
                 }
             }
 
-            // Global variable to track the start process
-let scannerStartPromise = null;
+            function renderSettings() {
+                const user = getUserInfo();
+                const createSettingItem = (icon, title, subtitle = '', action = '') => `
+                    <div class="flex items-center gap-4 p-4 border-b border-gray-100 dark:border-gray-700 last:border-0 cursor-pointer active:bg-gray-50 dark:active:bg-gray-700 transition" ${action ? `onclick="${action}"` : ''}>
+                        <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"><i class="${icon}"></i></div>
+                        <div class="flex-1"><h4 class="font-medium text-sm text-gray-900 dark:text-gray-100">${title}</h4>${subtitle ? `<p class="text-xs text-gray-500">${subtitle}</p>` : ''}</div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>`;
+                const notifState = localStorage.getItem('notifications') === 'off' ? 'Off' : 'On';
+                window.toggleNotif = () => {
+                    const current = localStorage.getItem('notifications');
+                    localStorage.setItem('notifications', current === 'off' ? 'on' : 'off');
+                    renderSettings();
+                    showToast(`Notifications turned ${current === 'off' ? 'On' : 'Off'}`);
+                };
 
-function startScanner() {
-    // 1. Setup UI
-    if (!html5QrCode) { 
-        html5QrCode = new Html5Qrcode("scanner-viewport"); 
-    }
-    const startBtn = document.getElementById('start-scan-btn');
-    if (startBtn) startBtn.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Starting...`;
-
-    // 2. Config
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
-    // 3. Success Callback
-    const onScanSuccess = (decodedText) => {
-        // === CRITICAL FIX: PREVENT RACE CONDITION ===
-        // We ensure the 'start' process is completely finished before we try to 'stop'
-        if (scannerStartPromise) {
-            scannerStartPromise.then(() => {
-                if (html5QrCode.isScanning) {
-                    stopScanner();
-                    if(navigator.vibrate) navigator.vibrate([100]);
-                    
-                    // Add a tiny delay to ensure UI is ready
-                    setTimeout(() => {
-                        fetchProductData(decodedText.split(':')[0]);
-                    }, 300);
-                }
-            }).catch(err => {
-                console.error("Scanner failed to start properly, ignoring scan:", err);
-            });
-        }
-    };
-
-    // 4. Start Camera (Store the promise!)
-    scannerStartPromise = html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
-        .then(() => {
-            // Success: Hide button
-            if (startBtn) startBtn.classList.add('hidden');
-        })
-        .catch((err) => {
-            console.warn("Back camera failed, trying user camera...", err);
-            // Fallback: Try Front Camera
-            return html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)
-                .then(() => {
-                    if (startBtn) startBtn.classList.add('hidden');
-                });
-        })
-        .catch((err) => {
-            // Fatal Error
-            console.error("Camera Error:", err);
-            alert(`Camera Error: ${err.name || err}`);
-            if (startBtn) {
-                startBtn.innerHTML = `<i class="fas fa-camera"></i> Retry Camera`;
-                startBtn.classList.remove('hidden'); 
-            }
-        });
-}
-            function stopScanner() { 
-    // Only try to stop if it's actually running
-    if (html5QrCode && html5QrCode.isScanning) { 
-        html5QrCode.stop().then(() => {
-            console.log("Scanner stopped successfully");
-            
-            // Bring the start button back for next time
-            const startBtn = document.getElementById('start-scan-btn');
-            if (startBtn) {
-                startBtn.innerHTML = `<i class="fas fa-camera text-primary"></i> Start Scanning`;
-                startBtn.classList.remove('hidden');
-            }
-            
-            // Clear the black video element
-            html5QrCode.clear(); 
-        }).catch(err => console.warn("Failed to stop scanner (it might be already stopped):", err));
-    } 
-}
-
-            function showAddProductForm() {
-                showModal(createAddProductFormHTML(currentBarcode));
-                const form = document.getElementById('add-product-form');
-                if (form) form.addEventListener('submit', handleAddProductSubmit);
-                const ignore = document.getElementById('ignore-btn');
-                if (ignore) ignore.addEventListener('click', () => { closeModal(); navigateTo('scanner-section'); });
-            }
-            function showModal(content) {
-                modalContainer.innerHTML = content;
-                modalContainer.classList.remove('hidden');
-                modalContainer.classList.add('flex');
-            }
-            function closeModal() {
-                modalContainer.classList.add('hidden');
-                modalContainer.innerHTML = '';
+                document.getElementById('settings-section').innerHTML = `
+                <div class="space-y-6 fade-in pb-10">
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-card">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                                ${user ? user.name[0].toUpperCase() : '<i class="fas fa-user"></i>'}
+                            </div>
+                            <div><h3 class="font-bold text-lg dark:text-white leading-tight">${user ? user.name : 'Guest User'}</h3><p class="text-xs text-gray-500">${user ? user.email : 'Sign in to sync'}</p></div>
+                        </div>
+                        ${user ? `<button id="logout-btn" class="w-full py-3 rounded-xl bg-red-50 text-red-500 font-semibold text-sm border border-red-100 dark:bg-red-900/10 dark:border-red-900/30">Log Out</button>` : `<button id="login-nav-btn" class="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/30">Login / Register</button>`}
+                    </div>
+                    <div><h3 class="px-2 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">General</h3><div class="bg-white dark:bg-gray-800 rounded-3xl shadow-card overflow-hidden">
+                        ${createSettingItem('fas fa-download', 'Install App', 'Add to Home Screen', "installApp()")}
+                        ${createSettingItem('fas fa-bell', 'Notifications', notifState, "toggleNotif()")}
+                        ${createSettingItem('fas fa-globe', 'Language', 'English', "showToast('Only English is currently supported')")}
+                        ${createSettingItem('fas fa-moon', 'Dark Mode', 'Toggle theme', "toggleTheme()")}
+                    </div></div>
+                    <div><h3 class="px-2 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Support & Legal</h3><div class="bg-white dark:bg-gray-800 rounded-3xl shadow-card overflow-hidden">
+                        ${createSettingItem('fas fa-shield-alt', 'Privacy Policy', '', "showPolicyModal()")}
+                        ${createSettingItem('fas fa-file-contract', 'Terms of Service', '', "showTermsModal()")}
+                        ${createSettingItem('fas fa-headset', 'Help & Support', 'Email us', "window.location.href='mailto:prajwaldhande017@gmail.com?subject=Support Request - Tattvam App'")}
+                        ${createSettingItem('fas fa-info-circle', 'About Tattvam', 'v2.0.0', "")}
+                    </div></div>
+                    <div class="text-center text-xs text-gray-400 py-4"><p>Tattvam App v2.0.0 (Beta)</p><p class="mt-1">Made with <i class="fas fa-heart text-red-400"></i> in India</p></div>
+                </div>`;
+                
+                if (user) document.getElementById('logout-btn').addEventListener('click', logout);
+                else document.getElementById('login-nav-btn').addEventListener('click', showLoginModal);
             }
 
-            function showNotificationModal() {
-                showModal(createNotificationModalHTML());
-                const closeBtn = modalContainer.querySelector('.modal-close-btn');
-                if (closeBtn) closeBtn.addEventListener('click', closeModal);
-            }
-            function showManualEntryModal() {
-                showModal(createManualEntryModalHTML());
-                const form = document.getElementById('manual-entry-form');
-                if (form) form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const barcode = document.getElementById('barcode-input').value;
-                    closeModal();
-                    if(barcode) fetchProductData(barcode);
-                });
-                const cancel = modalContainer.querySelector('.modal-cancel-btn');
-                if (cancel) cancel.addEventListener('click', closeModal);
-            }
-            function showLoginModal() {
-                showModal(createLoginModalHTML());
-                const loginForm = document.getElementById('login-form');
-                const registerForm = document.getElementById('register-form');
-                if (loginForm) loginForm.addEventListener('submit', (e) => { e.preventDefault(); handleLogin(e.target.email.value, e.target.password.value); });
-                if (registerForm) registerForm.addEventListener('submit', (e) => { e.preventDefault(); handleRegister(e.target.name.value, e.target.email.value, e.target.password.value); });
-                const showRegisterBtn = document.getElementById('show-register');
-                const showLoginBtn = document.getElementById('show-login');
-                if (showRegisterBtn) showRegisterBtn.addEventListener('click', () => { document.getElementById('login-view').classList.add('hidden'); document.getElementById('register-view').classList.remove('hidden'); });
-                if (showLoginBtn) showLoginBtn.addEventListener('click', () => { document.getElementById('register-view').classList.add('hidden'); document.getElementById('login-view').classList.remove('hidden'); });
-                const closeBtn = modalContainer.querySelector('.modal-close-btn');
-                if (closeBtn) closeBtn.addEventListener('click', closeModal);
-            }
-
-            async function handleAddProductSubmit(e) {
-                e.preventDefault();
-                const submitButton = e.target.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = `<i class="fas fa-spinner animate-spin"></i> Submitting...`;
-                const formData = new FormData(e.target);
-                formData.append('barcode', currentBarcode);
-                const response = await fetchApi('/products', { method: 'POST', body: formData });
-                if (response && response.ok) {
-                    showToast('Product submitted for review!', 'success');
-                    closeModal();
-                    navigateTo('scanner-section');
-                } else {
-                    const error = await response?.json();
-                    showToast(error?.message || 'Submission failed.', 'error');
-                }
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Submit for Review';
-            }
-
-            function getUserInfo() { try { return JSON.parse(localStorage.getItem('userInfo')); } catch(e) { return null; } }
-            function logout() { localStorage.removeItem('userInfo'); navigateTo('scanner-section'); showToast('You have been logged out.', 'info'); }
-
-            async function handleLogin(email, password) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/users/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-                    const data = await response.json();
-                    if (!response.ok) { showToast(data.message, 'error'); }
-                    else { localStorage.setItem('userInfo', JSON.stringify(data)); closeModal(); navigateTo('scanner-section'); showToast(`Welcome back, ${data.name}!`, 'success'); }
-                } catch (err) {
-                    showToast('Login failed. Check server.', 'error');
-                }
-            }
-            async function handleRegister(name, email, password) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/users/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password }) });
-                    const data = await response.json();
-                    if (!response.ok) { showToast(data.message, 'error'); }
-                    else { localStorage.setItem('userInfo', JSON.stringify(data)); closeModal(); navigateTo('scanner-section'); showToast(`Welcome, ${data.name}!`, 'success'); }
-                } catch (err) {
-                    showToast('Registration failed. Check server.', 'error');
-                }
-            }
-
-            function initializeTheme() { const isDark = localStorage.theme === 'dark'; document.documentElement.classList.toggle('dark', isDark); }
-            function toggleTheme() { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
-            function showToast(message, type = 'info') {
-                const toastContainer = document.getElementById('toast-container');
-                const i = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-triangle' };
-                const c = { info: 'bg-blue-500', success: 'bg-green-500', error: 'bg-red-500' };
-                const t = document.createElement('div');
-                t.className = `flex items-center gap-3 ${c[type]} text-white py-2 px-4 rounded-lg shadow-lg fade-in`;
-                t.innerHTML = `<i class="fas ${i[type]}"></i><p>${message}</p>`;
-                toastContainer.appendChild(t);
-                setTimeout(() => t.remove(), 3000);
-            }
-
-            // === IMAGE URL HANDLING ===
-            const buildImageUrl = (urlPath) => {
-                if (!urlPath) return 'https://placehold.co/150x150/e2e8f0/334155?text=No+Image';
-                if (typeof urlPath !== 'string') return 'https://placehold.co/150x150/e2e8f0/334155?text=No+Image';
-                if (urlPath.startsWith('http')) return urlPath;
-                let cleanPath = urlPath.replace(/\\/g, '/');
-                if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
-                if (!cleanPath.startsWith('/uploads')) {
-                    cleanPath = '/uploads' + cleanPath;
-                }
-                return `${API_BASE_URL}${cleanPath}`;
-            };
-
-            // generates star icons for rating (supports halves)
-            const generateStarRating = (rating = 0) => {
-                let s = '';
-                const r = Math.max(0, Math.min(5, Number(rating) || 0));
-                for (let i = 1; i <= 5; i++) {
-                    if (i <= r) s += '<i class="fas fa-star"></i>';
-                    else if (i - 0.5 <= r) s += '<i class="fas fa-star-half-alt"></i>';
-                    else s += '<i class="far fa-star"></i>';
-                }
-                return s;
-            };
-
-            const getNutriScoreBadge = (scoreRaw) => {
-                if (!scoreRaw) return '';
-                const score = scoreRaw.toString().toUpperCase();
-                const c = {A:'bg-green-500',B:'bg-lime-500',C:'bg-yellow-500',D:'bg-orange-500',E:'bg-red-500'};
-                return `<div class="flex-shrink-0 w-16 h-16 rounded-full ${c[score]||'bg-gray-400'} flex flex-col items-center justify-center text-white font-bold text-center leading-tight shadow-lg"><span class="text-2xl">${score}</span><span class="text-xs tracking-wider">NUTRI-SCORE</span></div>`;
-            };
-
-            // ===== Full product detail HTML generator (fixed keys) =====
-            const createProductDetailHTML = (p) => {
-    // ====== IMAGE (only REAL backend keys) ======
-    const imgSrc = buildImageUrl(
-        p.imageUrl || p.image_url || p.productImage
-    );
-
-    // ====== NAME + BRAND ======
-    const name = p.name || p.product_name || "Unknown Product";
-    const brand = p.brand || p.product_brand || "Unknown";
-
-    // ====== RATING ======
-    const rating = Math.max(0, Math.min(5, Number(p.rating) || 0));
-
-    // ====== NUTRITION (correct backend mapping) ======
-    const nut = p.nutrition || {};
-    const calories = nut.calories ?? 0;
-    const protein = nut.protein ?? 0;
-    const carbs = nut.carbs ?? 0;
-    const fat = nut.fat ?? 0;
-
-    // ====== INGREDIENTS ======
-    let ingredientsHTML = "";
-
-    if (Array.isArray(p.ingredients) && p.ingredients.length > 0) {
-        ingredientsHTML = p.ingredients
-            .map(i => `
-                <span class="py-1 px-3 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
-                    ${i.name}
-                </span>
-            `)
-            .join("");
-    } 
-    else if (typeof p.ingredients === "string") {
-        // Split into pills
-        const parts = p.ingredients.split(",").map(x => x.trim()).slice(0, 30);
-        ingredientsHTML = parts
-            .map(part => `
-                <span class="py-1 px-3 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
-                    ${part}
-                </span>
-            `)
-            .join("");
-    } 
-    else {
-        ingredientsHTML = `<p class="text-sm text-gray-500">No ingredient data available.</p>`;
-    }
-
-    // ====== WARNINGS ======
-    const warnings = p.warnings?.length
-        ? p.warnings.map(w => `<li>${w}</li>`).join("")
-        : "";
-
-    // ====== NUTRI-SCORE BADGE ======
-    const score = p.nutriScore || "E";
-    const scoreColors = {
-        A: "bg-green-500",
-        B: "bg-lime-500",
-        C: "bg-yellow-500",
-        D: "bg-orange-500",
-        E: "bg-red-500"
-    };
-
-    const nutriBadge = `
-        <div class="flex-shrink-0 w-16 h-16 rounded-full ${scoreColors[score] || "bg-gray-400"}
-            flex flex-col items-center justify-center text-white font-bold text-center shadow-lg">
-            <span class="text-2xl">${score}</span>
-            <span class="text-[10px] leading-tight">NUTRI</span>
-        </div>
-    `;
-
-    // ====== FINAL UI HTML ======
-    return `
-    <div class="space-y-4 fade-in">
-
-        <!-- Product Top Card -->
-        <div class="glass-effect p-4 rounded-2xl shadow-card">
-            <div class="flex items-start justify-between gap-4">
-
-                <div class="flex items-start gap-4">
-
-                    <img src="${imgSrc}" 
-                         class="w-24 h-24 object-contain rounded-xl bg-white dark:bg-gray-700/50 p-2">
-
-                    <div class="flex-1">
-                        <p class="text-sm text-gray-500 font-semibold">${brand}</p>
-                        <h2 class="text-2xl font-bold">${name}</h2>
-
-                        <div class="flex items-center gap-2 mt-2">
-                            <div class="text-yellow-400">${generateStarRating(rating)}</div>
-                            <span class="font-bold text-sm text-gray-600 dark:text-gray-300">${rating.toFixed(1)}/5</span>
+            const createScannerHTML = (trending) => `
+                <div class="space-y-6 fade-in pb-6">
+                    <div class="relative w-full h-80 rounded-3xl overflow-hidden bg-black shadow-lg border-2 border-gray-800/50">
+                        <div id="scanner-viewport" class="w-full h-full"></div>
+                        <div id="scanner-laser" class="scanner-laser"></div>
+                        <div class="absolute bottom-6 left-0 right-0 text-center pointer-events-none">
+                            <span class="inline-block bg-black/60 backdrop-blur-md text-white/90 text-xs font-semibold px-4 py-2 rounded-full border border-white/10 shadow-lg">Align barcode within frame</span>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <button id="start-scan-btn" class="pointer-events-auto bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold py-3.5 px-8 rounded-full shadow-2xl flex items-center gap-2 transform active:scale-95 transition hover:shadow-glow border border-gray-100 dark:border-gray-700">
+                                <i class="fas fa-camera text-primary text-lg"></i> <span class="text-sm">Tap to Scan</span>
+                            </button>
                         </div>
                     </div>
-                </div>
-
-                ${nutriBadge}
-            </div>
-        </div>
-
-        <!-- Warnings -->
-        ${
-            warnings
-                ? `
-                <div class="bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-600 p-4 rounded-2xl">
-                    <h3 class="font-bold mb-2 text-lg text-red-600 dark:text-red-300">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Health Warnings
-                    </h3>
-                    <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400">
-                        ${warnings}
-                    </ul>
-                </div>`
-                : ""
-        }
-
-        <!-- Ingredients -->
-        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-card">
-            <h3 class="font-bold mb-3 text-lg">Ingredients</h3>
-            <div class="flex flex-wrap gap-2">
-                ${ingredientsHTML}
-            </div>
-        </div>
-
-        <!-- Nutrition -->
-        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-card">
-            <h3 class="font-bold mb-3 text-lg">
-                Nutritional Facts <span class="text-sm text-gray-400">(per 100g)</span>
-            </h3>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-
-                <div>
-                    <p class="text-2xl font-bold text-primary">${calories}</p>
-                    <p class="text-sm text-gray-500">Calories</p>
-                </div>
-
-                <div>
-                    <p class="text-2xl font-bold text-primary">${protein}g</p>
-                    <p class="text-sm text-gray-500">Protein</p>
-                </div>
-
-                <div>
-                    <p class="text-2xl font-bold text-primary">${carbs}g</p>
-                    <p class="text-sm text-gray-500">Carbs</p>
-                </div>
-
-                <div>
-                    <p class="text-2xl font-bold text-primary">${fat}g</p>
-                    <p class="text-sm text-gray-500">Fat</p>
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-    `;
-};
-
-           
-
-            // HISTORY item uses same image key fallback logic
-            const createHistoryItemHTML = (p) => {
-                const imgSrc = buildImageUrl(p.image_url || p.productImage || p.imageUrl || p.product_image);
-                const displayName = p.productName || p.name || p.product_name || 'Unknown product';
-                const displayBrand = p.productBrand || p.brand || p.brands || 'Brand';
-                const rating = Math.max(0, Math.min(5, Number(p.rating) || 0));
-                return `<div class="flex items-center gap-3">
-                    <img src="${imgSrc}" class="w-16 h-16 object-contain rounded-xl bg-white p-1">
-                    <div class="flex-1 overflow-hidden">
-                        <p class="font-bold truncate">${displayName}</p>
-                        <p class="text-sm text-gray-500">${displayBrand}</p>
-                        <div class="flex items-center justify-between mt-1">
-                            <div class="text-yellow-400 text-xs">${generateStarRating(rating)}</div>
-                            <p class="text-xs text-gray-400">${p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : ''}</p>
+                    <button id="manual-entry-btn" class="w-full glass-effect py-4 rounded-2xl flex items-center justify-center gap-3 font-semibold text-primaryDark dark:text-primary transition active:scale-[0.98] shadow-sm">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><i class="fas fa-keyboard text-primary"></i></div> Enter Barcode Manually
+                    </button>
+                    <div>
+                        <div class="flex items-center justify-between mb-4 px-1">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100">Trending Now</h3>
+                            <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg">India</span>
+                        </div>
+                        <div id="trending-container" class="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide">
+                            <div class="w-full text-center py-4 text-gray-400 text-sm">Loading trends...</div>
                         </div>
                     </div>
                 </div>`;
-            };
 
-            // Scanner / trending list: use image_url fallback too
-            const createScannerHTML = (trendingProducts) => `
-<div class="fade-in space-y-4">
+            const createTrendingListHTML = (products) => {
+                if (!products || products.length === 0) return `<p class="text-gray-500 text-sm pl-2">No trending products yet.</p>`;
+                return products.map(p => {
+                    const imgSrc = buildImageUrl(p.imageUrl || p.image_url || p.productImage);
+                    const name = p.name || "Product";
+                    const brand = p.brand || "Brand";
+                    const rating = Math.max(0, Math.min(5, Number(p.rating) || 0));
+                    return `
+                    <div class="trending-item flex-shrink-0 w-36 glass-effect p-3 rounded-2xl shadow-card cursor-pointer border border-transparent hover:border-primary/30 transition bg-white dark:bg-gray-800" data-barcode="${p.barcode}">
+                        <div class="w-full h-24 mb-3 bg-white dark:bg-gray-700/50 rounded-xl p-2 flex items-center justify-center"><img src="${imgSrc}" class="max-w-full max-h-full object-contain"></div>
+                        <p class="font-bold text-sm truncate text-gray-800 dark:text-gray-200">${name}</p>
+                        <p class="text-[10px] text-gray-500 truncate mb-1">${brand}</p>
+                        <div class="text-[10px] text-yellow-400">${generateStarRating(rating)}</div>
+                    </div>`;
+                }).join('');
+            }
 
-    <div class="bg-primary/10 dark:bg-primary/20 p-3 rounded-2xl text-center text-sm font-medium text-primaryDark dark:text-primary">
-        💡 <b>Tip:</b> Check sodium levels on instant noodles.
-    </div>
-
-    <div class="h-64 rounded-2xl shadow-lg relative bg-gray-900 flex items-center justify-center overflow-hidden">
-    <div id="scanner-viewport" class="absolute inset-0"></div>
-    
-
-        <button id="start-scan-btn"
-            class="z-10 bg-white dark:bg-dark text-dark dark:text-light font-bold py-3 px-6 rounded-lg flex items-center gap-2 shadow-lg">
-            <i class="fas fa-camera text-primary"></i> Start Scanning
-        </button>
-
-        <p class="absolute bottom-2 text-white text-xs font-semibold bg-black/50 px-2 py-1 rounded-lg">
-            Place barcode inside the frame
-        </p>
-    </div>
-
-    <button id="manual-entry-btn"
-        class="glass-effect w-full max-w-xs mx-auto py-3 px-6 rounded-xl flex items-center justify-center gap-3 font-semibold text-primaryDark dark:text-primary">
-        <i class="fas fa-keyboard"></i> Enter Barcode Manually
-    </button>
-
-    <div>
-        <h3 class="font-bold text-lg mb-3">🔥 Trending in Nagpur</h3>
-
-        <div class="flex overflow-x-auto gap-3 pb-3 -mb-3">
-        ${
-            trendingProducts.length === 0
-            ? `<p class="text-gray-500 text-sm ml-2">No trending products</p>`
-            : trendingProducts.map(p => {
-
-                // ⭐ Clean unified image handling
-                const imgSrc = buildImageUrl(
-                    p.imageUrl || p.image_url || p.productImage
-                );
-
-                // ⭐ Clean name + brand
-                const name = p.name || "Unnamed";
-                const brand = p.brand || p.product_brand || "Brand";
-
-                // ⭐ Safe rating
+            const createProductDetailHTML = (p) => {
+                const imgSrc = buildImageUrl(p.imageUrl || p.image_url || p.productImage);
+                const name = p.name || p.product_name || "Unknown";
+                const brand = p.brand || p.product_brand || "Unknown Brand";
+                const nut = p.nutrition || {};
+                const score = p.nutriScore || "E";
                 const rating = Math.max(0, Math.min(5, Number(p.rating) || 0));
+                const scoreColor = { A: "bg-green-500", B: "bg-lime-500", C: "bg-yellow-500", D: "bg-orange-500", E: "bg-red-500" }[score] || "bg-gray-400";
+                
+                const getIngColor = (txt) => {
+                    const lower = txt.toLowerCase();
+                    const bad = ['sugar', 'syrup', 'oil', 'fat', 'salt', 'preservative', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'artificial', 'flavor', 'flavour', 'color'];
+                    const isBad = bad.some(b => lower.includes(b));
+                    return isBad ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 border-red-100 dark:border-red-800' : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-100 dark:border-green-800';
+                };
+
+                let ingHTML = "";
+                if(Array.isArray(p.ingredients) && p.ingredients.length) ingHTML = p.ingredients.map(i => `<span class="py-1.5 px-3 rounded-lg text-xs font-semibold border ${getIngColor(i.name)}">${i.name}</span>`).join('');
+                else if(typeof p.ingredients === "string") ingHTML = p.ingredients.split(',').map(s => `<span class="py-1.5 px-3 rounded-lg text-xs font-semibold border ${getIngColor(s.trim())}">${s.trim()}</span>`).join('');
 
                 return `
-                <div class="trending-item flex-shrink-0 w-36 glass-effect p-3 rounded-2xl shadow-card cursor-pointer"
-                     data-barcode="${p.barcode}">
-                    
-                    <img src="${imgSrc}" 
-                         alt="${name}" 
-                         class="w-full h-24 object-contain rounded-xl bg-white dark:bg-gray-700 p-1 mb-2">
+                <div class="space-y-5 pb-6 fade-in">
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-card border border-gray-100 dark:border-gray-700">
+                        <div class="flex gap-4">
+                            <div class="w-24 h-24 bg-gray-50 dark:bg-gray-700 rounded-2xl p-2 flex items-center justify-center flex-shrink-0"><img src="${imgSrc}" class="max-w-full max-h-full object-contain"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-bold text-primary tracking-wide uppercase mb-0.5">${brand}</p>
+                                <h2 class="text-xl font-bold leading-tight truncate mb-1 text-gray-900 dark:text-white">${name}</h2>
+                                <div class="flex items-center gap-2 mb-2"><div class="text-yellow-400 text-xs">${generateStarRating(rating)}</div><span class="text-xs font-bold text-gray-500 pt-0.5">${rating.toFixed(1)}</span></div>
+                                <div class="flex items-center gap-2"><div class="w-10 h-10 rounded-lg ${scoreColor} flex items-center justify-center text-white font-bold shadow-sm">${score}</div><div class="text-xs text-gray-500 dark:text-gray-400 leading-tight">Nutri-Score<br>Grade</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    ${p.warnings?.length ? `<div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 p-4 rounded-2xl"><div class="flex items-center gap-2 mb-2"><i class="fas fa-exclamation-circle text-red-500"></i><h3 class="font-bold text-red-700 dark:text-red-400 text-sm">Attention Needed</h3></div><ul class="text-xs text-red-600 dark:text-red-300 space-y-1 list-disc pl-4 opacity-90">${p.warnings.map(w=>`<li>${w}</li>`).join('')}</ul></div>` : ''}
+                    <div class="grid grid-cols-4 gap-2">
+                        <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl text-center shadow-sm border border-gray-100 dark:border-gray-700"><div class="text-lg font-bold text-gray-800 dark:text-white">${nut.calories||0}</div><div class="text-[10px] text-gray-500 font-medium">Kcal</div></div>
+                        <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl text-center shadow-sm border border-gray-100 dark:border-gray-700"><div class="text-lg font-bold text-blue-500">${nut.protein||0}g</div><div class="text-[10px] text-gray-500 font-medium">Prot</div></div>
+                        <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl text-center shadow-sm border border-gray-100 dark:border-gray-700"><div class="text-lg font-bold text-orange-500">${nut.carbs||0}g</div><div class="text-[10px] text-gray-500 font-medium">Carb</div></div>
+                        <div class="bg-white dark:bg-gray-800 p-3 rounded-2xl text-center shadow-sm border border-gray-100 dark:border-gray-700"><div class="text-lg font-bold text-yellow-500">${nut.fat||0}g</div><div class="text-[10px] text-gray-500 font-medium">Fat</div></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-card border border-gray-100 dark:border-gray-700"><h3 class="font-bold text-gray-900 dark:text-white mb-3">Ingredients</h3><div class="flex flex-wrap gap-2">${ingHTML || '<p class="text-sm text-gray-400">No data.</p>'}</div></div>
+                </div>`;
+            }
 
-                    <p class="font-bold text-xs truncate">${name}</p>
-                    <p class="text-[10px] text-gray-500 truncate">${brand}</p>
+            async function renderHistory() {
+                const section = document.getElementById('history-section');
+                if (!getUserInfo()) { section.innerHTML = createLoginPromptHTML(); return; }
+                section.innerHTML = `<div class="space-y-3 p-2"><div class="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded-2xl"></div><div class="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded-2xl"></div></div>`;
+                const response = await fetchApi('/scans/my');
+                if (response?.ok) {
+                    const data = await response.json();
+                    if (!data.length) { section.innerHTML = createEmptyStateHTML("No scan history yet."); return; }
+                    section.innerHTML = `<div class="space-y-3 pb-6">${data.map(p => {
+                        const imgSrc = buildImageUrl(p.image_url || p.productImage);
+                        const name = p.productName || p.name || "Unknown";
+                        const date = new Date(p.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+                        const rating = Math.max(0, Math.min(5, Number(p.rating) || 0));
+                        return `<div class="bg-white dark:bg-gray-800 p-3 rounded-2xl shadow-sm flex items-center gap-3 cursor-pointer active:scale-[0.99] transition border border-gray-100 dark:border-gray-700" onclick="fetchProductData('${p.barcode}')"><img src="${imgSrc}" class="w-14 h-14 rounded-xl object-contain bg-gray-50 dark:bg-gray-700 p-1"><div class="flex-1 min-w-0"><h4 class="font-bold text-sm truncate dark:text-white">${name}</h4><div class="flex items-center gap-2 mt-0.5"><div class="text-[10px] text-yellow-400 flex">${generateStarRating(rating)}</div><p class="text-xs text-gray-500">• ${date}</p></div></div><i class="fas fa-chevron-right text-gray-300 text-xs"></i></div>`;
+                    }).join('')}</div>`;
+                    window.fetchProductData = fetchProductData; 
+                } else section.innerHTML = createEmptyStateHTML("Failed to load history.");
+            }
 
-                    <div class="text-yellow-400 text-xs mt-1">${generateStarRating(rating)}</div>
-                </div>
-                `;
-            }).join('')
-        }
-        </div>
-    </div>
-</div>`;
+            function renderExplore() { document.getElementById('explore-section').innerHTML = createComingSoonHTML("Explore"); }
+            function renderProgress() { document.getElementById('progress-section').innerHTML = createComingSoonHTML("Progress"); }
 
+            function getUserInfo() { try { return JSON.parse(localStorage.getItem('userInfo')); } catch { return null; } }
+            function logout() { localStorage.removeItem('userInfo'); showToast("Logged out"); navigateTo('scanner-section'); }
+            function showToast(msg, type='info') {
+                const t = document.createElement('div');
+                const colors = { error: 'bg-red-500', success: 'bg-green-500', info: 'bg-gray-800' };
+                t.className = `${colors[type]} text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium animate-bounce`;
+                t.innerHTML = `<i class="fas ${type==='error'?'fa-exclamation-circle':'fa-info-circle'}"></i> ${msg}`;
+                const c = document.getElementById('toast-container');
+                c.appendChild(t);
+                setTimeout(() => t.remove(), 3000);
+            }
+            function showModal(html) {
+                modalContainer.innerHTML = html;
+                modalContainer.classList.remove('hidden');
+                modalContainer.classList.add('flex');
+                setTimeout(() => modalContainer.classList.remove('opacity-0'), 10);
+            }
+            function closeModal() {
+                modalContainer.classList.add('opacity-0');
+                setTimeout(() => { modalContainer.classList.add('hidden'); modalContainer.classList.remove('flex'); }, 300);
+            }
+            function buildImageUrl(path) { 
+                if (!path || typeof path !== 'string') return 'https://placehold.co/150?text=No+Img';
+                if (path.startsWith('http')) return path;
+                return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`; 
+            }
+            function generateStarRating(r) {
+                let h = '';
+                for(let i=1; i<=5; i++) h += i<=r ? '<i class="fas fa-star"></i>' : (i-0.5<=r ? '<i class="fas fa-star-half-alt"></i>' : '<i class="far fa-star"></i>');
+                return h;
+            }
 
+            const createLoginPromptHTML = () => `<div class="flex flex-col items-center justify-center h-64 text-center px-6"><div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4"><i class="fas fa-lock text-2xl text-gray-400"></i></div><h3 class="font-bold text-lg mb-1 dark:text-white">Login Required</h3><p class="text-sm text-gray-500 mb-6">Please log in to use the scanner.</p><button onclick="navigateTo('settings-section')" class="bg-primary text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-primary/30">Go to Login</button></div>`;
+            const createEmptyStateHTML = (msg) => `<div class="flex flex-col items-center justify-center h-64 text-center text-gray-400"><i class="fas fa-box-open text-4xl mb-3 opacity-50"></i><p>${msg}</p></div>`;
+            const createComingSoonHTML = (t) => `<div class="flex flex-col items-center justify-center h-64 text-center text-gray-400"><i class="fas fa-tools text-4xl mb-3 opacity-50"></i><p>${t} coming soon</p></div>`;
+            
+            window.showLoginModal = () => {
+                showModal(`<div class="bg-white dark:bg-gray-800 w-full max-w-sm p-6 rounded-3xl shadow-2xl relative"><button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times text-xl"></i></button><h2 class="text-2xl font-bold mb-6 text-center dark:text-white">Welcome Back</h2><form id="login-form" class="space-y-4"><input name="email" type="email" placeholder="Email" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-700 border-none outline-none focus:ring-2 ring-primary/50" required><input name="password" type="password" placeholder="Password" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-700 border-none outline-none focus:ring-2 ring-primary/50" required><button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30">Log In</button></form><p class="text-center mt-6 text-sm text-gray-500">No account? <button onclick="showRegisterModal()" class="text-primary font-bold">Register</button></p></div>`);
+                document.getElementById('login-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const res = await fetchApi('/users/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+                    if (res?.ok) { localStorage.setItem('userInfo', JSON.stringify(await res.json())); closeModal(); showToast("Logged In", "success"); navigateTo('scanner-section'); }
+                    else showToast("Login failed", "error");
+                });
+            }
+            
+            window.showRegisterModal = () => {
+                showModal(`<div class="bg-white dark:bg-gray-800 w-full max-w-sm p-6 rounded-3xl shadow-2xl relative"><button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times text-xl"></i></button><h2 class="text-2xl font-bold mb-6 text-center dark:text-white">Join Tattvam</h2><form id="reg-form" class="space-y-4"><input name="name" type="text" placeholder="Full Name" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-700 border-none outline-none focus:ring-2 ring-primary/50" required><input name="email" type="email" placeholder="Email" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-700 border-none outline-none focus:ring-2 ring-primary/50" required><input name="password" type="password" placeholder="Password" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-700 border-none outline-none focus:ring-2 ring-primary/50" required><button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30">Create Account</button></form><p class="text-center mt-6 text-sm text-gray-500">Have account? <button onclick="showLoginModal()" class="text-primary font-bold">Log In</button></p></div>`);
+                document.getElementById('reg-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const res = await fetchApi('/users/register', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+                    if (res?.ok) { localStorage.setItem('userInfo', JSON.stringify(await res.json())); closeModal(); showToast("Welcome!", "success"); navigateTo('scanner-section'); }
+                    else showToast("Failed to register", "error");
+                });
+            }
 
-            const createLoginPromptHTML = () => `<div class="text-center py-10 fade-in"><i class="fas fa-lock text-4xl text-gray-400 mb-4"></i><h3 class="text-xl font-bold">Login Required</h3><p class="text-gray-500 mb-4">Log in to use this feature.</p><button onclick="navigateTo('settings-section')" class="bg-primary text-white font-bold py-2 px-6 rounded-lg">Go to Settings</button></div>`;
-            const createEmptyStateHTML = (message) => `<div class="text-center py-10 fade-in"><i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i><h3 class="text-xl font-bold">${message}</h3></div>`;
-            const createScannerErrorHTML = (message) => `<div class="fade-in h-80 rounded-2xl shadow-lg mb-4 relative bg-red-500/20 text-red-500 flex flex-col items-center justify-center text-center p-4"><i class="fas fa-video-slash text-5xl mb-4"></i><h3 class="text-xl font-bold">Camera Error</h3><p>${message}</p></div><button id="manual-entry-btn-error" class="glass-effect w-full max-w-xs mx-auto py-3 px-6 rounded-xl flex items-center justify-center gap-3 font-semibold text-primaryDark"><i class="fas fa-keyboard"></i> Use Manual Entry</button>`;
-            const createSkeletonLoaderHTML = () => `<div class="p-4 space-y-4 animate-pulse"><div class="h-28 bg-gray-300/50 dark:bg-gray-700/50 rounded-2xl"></div><div class="h-20 bg-gray-300/50 dark:bg-gray-700/50 rounded-2xl"></div><div class="h-32 bg-gray-300/50 dark:bg-gray-700/50 rounded-2xl"></div></div>`;
-            const createSettingsHTML = (userInfo) => `<div class="p-4 space-y-4"><div class="glass-effect p-4 rounded-2xl"><h3 class="font-bold mb-3 text-lg">Account</h3>${userInfo ? `<div class="space-y-2 text-sm"><p>Logged in as: <strong>${userInfo.name}</strong></p><button id="logout-btn" class="text-red-500 font-semibold">Log Out</button></div>` : `<div class="text-sm"><p class="mb-2">Log in to track progress.</p><button id="login-register-btn" class="w-full py-2 rounded-lg bg-primary text-white font-semibold">Login or Register</button></div>`}</div></div>`;
-            const createManualEntryModalHTML = () => `<div class="fade-in w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"><h3 class="text-xl font-bold mb-4">Enter Barcode</h3><form id="manual-entry-form"><input id="barcode-input" type="number" placeholder="Enter barcode..." class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700" required><div class="flex gap-3 mt-4"><button type="button" class="modal-cancel-btn w-full py-2 rounded-lg bg-gray-200 dark:bg-gray-600 font-semibold">Cancel</button><button id="submit-barcode" type="submit" class="w-full py-2 rounded-lg bg-primary text-white font-semibold">Submit</button></div></form></div>`;
-            const createNotificationModalHTML = () => `<div class="fade-in w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">Notifications</h3><button class="modal-close-btn text-2xl text-gray-400 hover:text-gray-600">&times;</button></div><div class="text-center text-gray-500 py-8"><i class="fas fa-inbox text-3xl mb-2"></i><p>No new notifications</p></div></div>`;
-            const createLoginModalHTML = () => `<div class="fade-in w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 relative"><button class="modal-close-btn absolute top-3 right-4 text-2xl text-gray-400 hover:text-gray-600">&times;</button><div id="login-view"><h3 class="text-xl font-bold mb-4 text-center">Login</h3><form id="login-form" class="space-y-3"><input name="email" type="email" placeholder="Email" required class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700"><input name="password" type="password" placeholder="Password" required class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700"><button type="submit" class="w-full py-2 rounded-lg bg-primary text-white font-semibold">Login</button></form><p class="text-sm text-center mt-4">No account? <button id="show-register" class="font-semibold text-primary">Register</button></p></div><div id="register-view" class="hidden"><h3 class="text-xl font-bold mb-4 text-center">Create Account</h3><form id="register-form" class="space-y-3"><input name="name" type="text" placeholder="Name" required class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700"><input name="email" type="email" placeholder="Email" required class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700"><input name="password" type="password" placeholder="Password" required class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700"><button type="submit" class="w-full py-2 rounded-lg bg-primary text-white font-semibold">Register</button></form><p class="text-sm text-center mt-4">Have an account? <button id="show-login" class="font-semibold text-primary">Login</button></p></div></div>`;
-            const createAddProductFormHTML = (barcode) => `<div class="fade-in w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">Add New Product</h3><button class="modal-close-btn text-2xl text-gray-400 hover:text-gray-600">&times;</button></div><p class="text-sm text-gray-500 mb-4">Product ${barcode} isn't in our database. Help by adding it!</p><form id="add-product-form" class="space-y-4"><input name="name" type="text" placeholder="Product Name" required class="w-full p-3 mt-1 rounded-lg bg-gray-100 dark:bg-gray-700"><input name="brand" type="text" placeholder="Brand" required class="w-full p-3 mt-1 rounded-lg bg-gray-100 dark:bg-gray-700"><input name="image" type="file" accept="image/*" required class="w-full p-2 mt-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-sm border"><div class="flex gap-3 pt-2"><button type="button" id="ignore-btn" class="w-full py-2 rounded-lg bg-gray-200 dark:bg-gray-600 font-semibold">Ignore</button><button type="submit" class="w-full py-2 rounded-lg bg-primary text-white font-semibold">Submit for Review</button></div></form></div>`;
-            const createComingSoonHTML = (feature) => `<div class="text-center py-10 fade-in"><i class="fas fa-cogs text-4xl text-gray-400 mb-4"></i><h3 class="text-xl font-bold">${feature}</h3><p class="text-gray-500">This feature is under construction.</p></div>`;
+            window.showManualEntryModal = () => {
+                showModal(`<div class="bg-white dark:bg-gray-800 w-full max-w-sm p-6 rounded-3xl shadow-2xl"><h3 class="font-bold text-xl mb-4 dark:text-white">Manual Entry</h3><form id="manual-form"><input id="b-in" type="number" placeholder="Barcode Number" class="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 mb-4 outline-none" required><div class="flex gap-3"><button type="button" onclick="closeModal()" class="flex-1 py-3 bg-gray-200 dark:bg-gray-600 rounded-xl font-semibold">Cancel</button><button type="submit" class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold">Search</button></div></form></div>`);
+                document.getElementById('manual-form').addEventListener('submit', (e) => { e.preventDefault(); closeModal(); fetchProductData(document.getElementById('b-in').value); });
+            }
 
+            window.showAddProductForm = () => {
+                showModal(`<div class="bg-white dark:bg-gray-800 w-full max-w-sm p-6 rounded-3xl shadow-2xl"><h3 class="font-bold text-xl mb-2 dark:text-white">Add Product</h3><p class="text-xs text-gray-500 mb-4">Barcode: ${currentBarcode}</p><form id="add-form" class="space-y-3"><input name="name" placeholder="Name" class="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl" required><input name="brand" placeholder="Brand" class="w-full p-3 bg-gray-100 dark:bg-gray-700 rounded-xl" required><input name="image" type="file" class="w-full text-sm" required><div class="flex gap-3 mt-2"><button type="button" onclick="closeModal()" class="flex-1 py-3 bg-gray-200 dark:bg-gray-600 rounded-xl font-semibold">Cancel</button><button type="submit" class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold">Submit</button></div></form></div>`);
+                document.getElementById('add-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.target); fd.append('barcode', currentBarcode);
+                    const res = await fetchApi('/products', { method: 'POST', body: fd });
+                    if(res?.ok) { showToast("Submitted!"); closeModal(); } else showToast("Failed", "error");
+                });
+            }
+
+            // Legal Modals
+            window.showPolicyModal = () => showModal(`<div class="bg-white dark:bg-gray-800 w-full max-w-md p-6 rounded-3xl shadow-2xl h-[70vh] overflow-y-auto"><h2 class="text-xl font-bold mb-4 dark:text-white">Privacy Policy</h2><p class="text-sm text-gray-500 mb-4">We collect minimal data to improve scanning accuracy. Your scan history is stored securely.</p><button onclick="closeModal()" class="w-full py-2 bg-primary text-white rounded-lg font-bold">Close</button></div>`);
+            window.showTermsModal = () => showModal(`<div class="bg-white dark:bg-gray-800 w-full max-w-md p-6 rounded-3xl shadow-2xl h-[70vh] overflow-y-auto"><h2 class="text-xl font-bold mb-4 dark:text-white">Terms of Service</h2><p class="text-sm text-gray-500 mb-4">By using Tattvam, you agree to our terms. Information is for reference only.</p><button onclick="closeModal()" class="w-full py-2 bg-primary text-white rounded-lg font-bold">Close</button></div>`);
+
+            function initializeTheme() {
+                const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+            }
+            window.toggleTheme = () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            }
+
+            window.closeModal = closeModal;
+            window.navigateTo = navigateTo;
             initializeApp();
         });
     </script>
