@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Tattvam",
+    "slug": "tattvam",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png", 
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.prajwal.tattvam"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3e6347df-80c7-498b-80d2-1d365247189e"
+      }
+    }
+  }
+}
