@@ -1,312 +1,315 @@
-import asyncHandler from 'express-async-handler';
-import Product from '../models/Product.js';
-import fetch from 'node-fetch';
-import { performHealthAnalysis } from '../utils/healthAnalysisService.js';
-import { formatOpenFoodFactsData, formatUsdaData, formatSpoonacularData } from '../utils/apiFormatters.js';
-import logger from '../utils/logger.js';
+import asyncHandler from "express-async-handler";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import Product from "../models/Product.js";
+import fetch from "node-fetch";
+import { formatOpenFoodFactsData } from "../utils/apiFormatters.js";
 
-/* -------------------------------------------------------
-   HELPER: Map DB Product -> Frontend Format
-   (Converts snake_case DB fields to camelCase UI fields)
-------------------------------------------------------- */
-const mapProductForFrontend = (p) => ({
-  barcode: p.barcode,
-  name: p.product_name || "Unknown",
-  brand: p.product_brand || "Unknown",
-  category: p.category || "General",
-  
-  // Handle missing or placeholder images
-  imageUrl: p.image_url && p.image_url !== 'null' && p.image_url !== '' 
-    ? p.image_url 
-    : "/uploads/placeholder.png",
+/* ======================================================================
+   MAP DB → FRONTEND FORMAT (PERFECT MATCH FOR REACT NATIVE)
+   ====================================================================== */
+const mapProductForFrontend = (p) => {
+  const badKeywords = ["palm oil", "msg", "sugar", "salt", "preservative", "artificial", "refined wheat flour"];
+  const ingList = p.ingredients ? p.ingredients.split(",").map((i) => i.trim()) : [];
+  const badIngList = ingList.filter(ing => 
+    badKeywords.some(bad => ing.toLowerCase().includes(bad))
+  );
 
-  // Handle ingredients (String -> Array of Objects)
-  ingredients: p.ingredients 
-    ? (typeof p.ingredients === "string" 
-        ? p.ingredients.split(",").map(i => ({ name: i.trim(), safety: "neutral" })) 
-        : p.ingredients)
-    : [],
+  let finalNutriScore = p.nutriScore;
+  if (!finalNutriScore || finalNutriScore === "?") {
+      const sugar = p.sugar_content_g || 0;
+      const fat = p.fat_content_g || 0;
+      const sodium = p.sodium_mg || 0;
 
-  nutrition: {
-    calories: p.calories || 0,
-    protein: p.protein_content_g || 0,
-    carbs: p.carbs_content_g || 0,
-    fat: p.fat_content_g || 0,
-    sugar: p.sugar_content_g || 0,
-    sodium: p.sodium_mg || 0,
-  },
-
-  rating: p.rating || 3,
-  nutriScore: p.nutriScore || "E",
-  warnings: p.remarks ? p.remarks.split(";").map(w => w.trim()) : [],
-  status: p.status,
-});
-
-/* -------------------------------------------------------
-   HELPER: Smart Search for "Best Match"
-   (Searches OFF by name to find a high-quality record/image)
-------------------------------------------------------- */
-const findBestMatch = async (brand, name) => {
-  try {
-    const query = `${brand} ${name}`;
-    // Search OFF for the most popular results matching this name
-    const searchUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=1`;
-    
-    const response = await fetch(searchUrl);
-    const data = await response.json();
-
-    if (data.products && data.products.length > 0) {
-      return data.products[0];
-    }
-  } catch (error) {
-    logger.warn(`Smart search failed for ${brand} ${name}: ${error.message}`);
+      if (sugar > 15 || fat > 25) finalNutriScore = 'E';
+      else if (fat > 15 || sodium > 500) finalNutriScore = 'D';
+      else if (sugar > 5 || fat > 10) finalNutriScore = 'C';
+      else finalNutriScore = 'B'; 
   }
-  return null;
+
+  const ratingMap = { A: 5, B: 4, C: 3, D: 2, E: 1 };
+  let finalRating = p.rating || 3.5;
+  if (!p.nutriScore || p.nutriScore === "?") {
+      finalRating = ratingMap[finalNutriScore] || finalRating;
+  }
+
+  return {
+    barcode: p.barcode,
+    name: p.product_name,
+    brand: p.product_brand,
+    imageUrl: p.image_url,
+    ingredients: ingList, 
+    badIngredients: badIngList, 
+    nutrition: {
+      calories: Math.round(p.calories || 0),
+      protein: Number((p.protein_content_g || 0).toFixed(1)),
+      carbs: Number((p.carbs_content_g || 0).toFixed(1)),
+      fat: Number((p.fat_content_g || 0).toFixed(1)),
+      sugar: Number((p.sugar_content_g || 0).toFixed(1)),
+      sodium: Math.round(p.sodium_mg || 0),
+    },
+    rating: finalRating,
+    nutriScore: finalNutriScore, 
+    warnings: p.remarks ? p.remarks.split("; ").filter(Boolean) : [],
+    status: p.status || "approved",
+  };
 };
 
-/* -------------------------------------------------------
-   GET PRODUCT BY BARCODE (Waterfall & Smart-Fill)
-------------------------------------------------------- */
+/* ======================================================================
+   🤖 AI FALLBACK FUNCTION (For Missing Nutri-Score)
+   ====================================================================== */
+const getAIProductDetails = async (ingredientsText, nutritionData, productName) => {
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
+        
+        const prompt = `
+        You are an expert Dietitian. I have a product named "${productName}". 
+        Its raw ingredients are: ${ingredientsText}.
+        Its nutrition info is: ${JSON.stringify(nutritionData)}.
+        
+        Task:
+        1. Clean up the ingredients list (remove numbers, weird brackets like ") 4").
+        2. Identify 'badIngredients' (like Sugar, Palm Oil, Preservatives).
+        3. Estimate a realistic Nutri-Score (A, B, C, D, or E) based on these ingredients and nutrition.
+        
+        Respond STRICTLY in this JSON format only:
+        {
+          "nutriScore": "D",
+          "cleanIngredients": ["Ingredient 1", "Ingredient 2"],
+          "badIngredients": ["Palm Oil", "Sugar"]
+        }`;
+
+        const result = await model.generateContent(prompt);
+        let aiText = result.response.text();
+        aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(aiText);
+    } catch (error) {
+        console.error("AI Fallback Error:", error);
+        return null; // Silent fail agar API me kuch issue ho
+    }
+};
+
+// ============================================================================
+// BARCODE SCANNER LOGIC
+// ============================================================================
+
 const getProductByBarcode = asyncHandler(async (req, res) => {
   const { barcode } = req.params;
-  logger.info(`Searching for barcode: ${barcode}`);
 
-  // 1. LOCAL DB CHECK
-  let product = await Product.findOne({ barcode });
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("🎯 CONTROLLER START - Barcode:", barcode);
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-  if (product) {
-    logger.info(`FOUND product in local DB: ${product.product_name}`);
-    const mapped = mapProductForFrontend(product);
-    // Re-analyze just in case rules changed
-    const analyzed = performHealthAnalysis(mapped);
-    return res.json(analyzed);
+  const existing = await Product.findOne({ barcode });
+  
+  if (existing && existing.nutriScore !== '?') {
+    console.log("✅ FOUND IN DB WITH VALID SCORE");
+    return res.json(mapProductForFrontend(existing));
+  }
+  
+  if (existing && existing.nutriScore === '?') {
+    console.log("⚠️ DB MEIN KACHRA SCORE ('?') THA, FETCHING FRESH DATA...");
   }
 
-  let finalProductData = null;
+  console.log("📡 FETCHING FROM API...");
+  const response = await fetch(
+    `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`
+  );
+  const json = await response.json();
 
-  // 2. OPEN FOOD FACTS (Primary Source)
-  try {
-    const offRes = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-    const offData = await offRes.json();
-    
-    if (offData.status === 1 || offData.product) {
-      logger.info(`Found in OpenFoodFacts`);
-      finalProductData = formatOpenFoodFactsData(offData);
-    }
-  } catch (e) {
-    logger.warn(`OFF Failed: ${e.message}`);
+  if (!json || !json.product) {
+    console.log("❌ NOT FOUND IN API");
+    return res.status(404).json({ message: "Product not found" });
   }
 
-  // 3. USDA FALLBACK (If OFF failed)
-  // (Only runs if USDA_API_KEY is in .env)
-  if (!finalProductData && process.env.USDA_API_KEY) {
-    try {
-      const usdaRes = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${barcode}&api_key=${process.env.USDA_API_KEY}`);
-      const usdaData = await usdaRes.json();
+  console.log("🔄 FORMATTING DATA...");
+  const finalData = formatOpenFoodFactsData(json);
+
+  if (!finalData) {
+    return res.status(500).json({ message: "Failed to process product data" });
+  }
+
+  // ✅ NAYA LOGIC: AI FALLBACK INJECTION
+  if (!finalData.nutriScore || finalData.nutriScore === '?' || finalData.nutriScore === 'unknown') {
+      console.log("🤖 API didn't give Nutri-Score. Calling Gemini AI Fallback...");
       
-      if (usdaData.foods && usdaData.foods.length > 0) {
-        logger.info(`Found in USDA`);
-        finalProductData = formatUsdaData(usdaData.foods[0], barcode);
+      const rawIngredients = Array.isArray(finalData.ingredients) ? finalData.ingredients.join(', ') : (finalData.ingredients || "");
+      const aiData = await getAIProductDetails(rawIngredients, finalData.nutrition, finalData.name);
+      
+      if (aiData) {
+          finalData.nutriScore = aiData.nutriScore.toUpperCase();
+          finalData.ingredients = aiData.cleanIngredients;
+      } else {
+          finalData.nutriScore = 'E'; // Default if AI fails
       }
-    } catch (e) {
-      logger.warn(`USDA Failed: ${e.message}`);
-    }
+      console.log("✨ AI Generated Score:", finalData.nutriScore);
   }
 
-  // 4. SPOONACULAR FALLBACK (If others failed)
-  // (Only runs if SPOONACULAR_API_KEY is in .env)
-  if (!finalProductData && process.env.SPOONACULAR_API_KEY) {
-    try {
-      const spoonRes = await fetch(`https://api.spoonacular.com/food/products/upc/${barcode}?apiKey=${process.env.SPOONACULAR_API_KEY}`);
-      if (spoonRes.ok) {
-        const spoonData = await spoonRes.json();
-        logger.info(`Found in Spoonacular`);
-        finalProductData = formatSpoonacularData(spoonData, barcode);
-      }
-    } catch (e) {
-      logger.warn(`Spoonacular Failed: ${e.message}`);
-    }
+  const nutriScoreToSave = finalData.nutriScore ? String(finalData.nutriScore).toUpperCase() : "?";
+  
+  try {
+     const saved = await Product.findOneAndUpdate(
+        { barcode: finalData.barcode },
+        {
+          barcode: finalData.barcode,
+          product_name: finalData.name,
+          product_brand: finalData.brand,
+          image_url: finalData.imageUrl,
+          ingredients: Array.isArray(finalData.ingredients) 
+            ? finalData.ingredients.map(i => i.name || i).join(", ") 
+            : finalData.ingredients,
+          calories: Math.round(finalData.nutrition?.calories || 0),
+          protein_content_g: Number((finalData.nutrition?.protein || 0).toFixed(1)),
+          carbs_content_g: Number((finalData.nutrition?.carbs || 0).toFixed(1)),
+          fat_content_g: Number((finalData.nutrition?.fat || 0).toFixed(1)),
+          sugar_content_g: Number((finalData.nutrition?.sugar || 0).toFixed(1)),
+          sodium_mg: Math.round(finalData.nutrition?.sodium || 0),
+          rating: finalData.rating || 3.5,
+          nutriScore: nutriScoreToSave, 
+          remarks: Array.isArray(finalData.warnings) ? finalData.warnings.join("; ") : "",
+          status: "approved",
+        },
+        { new: true, upsert: true, runValidators: true }
+      );
+      console.log("✅ SAVED TO DB:", saved.barcode, "WITH SCORE:", nutriScoreToSave);
+  } catch (err) {
+      console.error("❌ DB SAVE ERROR:", err);
   }
 
-  // 5. SMART FILL & SAVE
-  if (finalProductData) {
-    // VALIDATION: Don't try to smart-fill if we don't even have a valid name
-    const hasValidName = finalProductData.name && 
-                         finalProductData.name.toLowerCase() !== 'unknown' &&
-                         finalProductData.name.trim() !== '';
+  const badKeywords = ["palm oil", "msg", "sugar", "salt", "preservative", "artificial"];
+  const ingArray = Array.isArray(finalData.ingredients) 
+    ? finalData.ingredients.map(i => i.name || i) 
+    : (finalData.ingredients ? finalData.ingredients.split(",") : []);
+    
+  finalData.ingredients = ingArray;
+  finalData.badIngredients = ingArray.filter(ing => 
+    badKeywords.some(bad => String(ing).toLowerCase().includes(bad))
+  );
 
-    // Check for missing image or incomplete data
-    const isMissingImage = !finalProductData.imageUrl || 
-                           finalProductData.imageUrl.includes('placeholder') || 
-                           finalProductData.imageUrl === "";
-                           
-    const isMissingNutrition = finalProductData.nutrition.calories === 0;
-
-    // Only run Smart Fill if we have a real name to search for
-    if (hasValidName && (isMissingImage || isMissingNutrition)) {
-        logger.info(`Product data sparse for "${finalProductData.name}". Attempting Smart Fill...`);
-        const bestMatch = await findBestMatch(finalProductData.brand, finalProductData.name);
-        
-        if (bestMatch) {
-            // Fill Image
-            if (isMissingImage && (bestMatch.image_url || bestMatch.image_front_url)) {
-                let newImg = bestMatch.image_url || bestMatch.image_front_url;
-                if (newImg.startsWith('http://')) newImg = newImg.replace('http://', 'https://');
-                finalProductData.imageUrl = newImg;
-                logger.info(`✅ Smart Fill: Found better image`);
-            }
-            
-            // OPTIONAL: Fill Ingredients/Nutrition if ours is empty but match has it
-            if (isMissingNutrition && bestMatch.nutriments) {
-                 // You can add logic here to merge nutrition data if needed
-            }
-        }
-    } else if (!hasValidName) {
-        logger.warn("Skipping Smart Fill: Product name is Unknown.");
-    }
-
-    // Save to Local DB (Persistence)
-    try {
-        const newProduct = await Product.create({
-            barcode: finalProductData.barcode,
-            product_name: finalProductData.name,
-            product_brand: finalProductData.brand,
-            image_url: finalProductData.imageUrl,
-            
-            // Convert Array of Objects back to String for DB storage
-            ingredients: Array.isArray(finalProductData.ingredients) 
-                ? finalProductData.ingredients.map(i => i.name).join(", ")
-                : finalProductData.ingredients,
-            
-            calories: finalProductData.nutrition.calories,
-            protein_content_g: finalProductData.nutrition.protein,
-            carbs_content_g: finalProductData.nutrition.carbs,
-            fat_content_g: finalProductData.nutrition.fat,
-            sugar_content_g: finalProductData.nutrition.sugar,
-            sodium_mg: finalProductData.nutrition.sodium,
-            
-            rating: finalProductData.rating,
-            nutriScore: finalProductData.nutriScore,
-            remarks: finalProductData.warnings.join("; "),
-            status: "approved"
-        });
-        logger.info(`Saved new product to DB: ${newProduct.product_name}`);
-    } catch (saveError) {
-        // Ignore duplicate key errors (parallel requests), log others
-        if (!saveError.message.includes('E11000')) {
-            logger.error(`Failed to save product to DB: ${saveError.message}`);
-        }
-    }
-
-    return res.json(finalProductData);
-  }
-
-  // 6. NOT FOUND ANYWHERE
-  logger.warn(`NOT FOUND: ${barcode}`);
-  return res.status(404).json({
-    message: "Product not found. Please add it manually.",
-  });
+  console.log("📤 SENDING TO FRONTEND!");
+  return res.json(finalData);
 });
 
-/* -------------------------------------------------------
-   CREATE PRODUCT (USER SUBMITTED)
-------------------------------------------------------- */
+/* ======================================================================
+   OTHER CONTROLLERS
+   ====================================================================== */
+
+const getProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find({ status: "approved" }).sort({ createdAt: -1 }).limit(10);
+  res.json(products.map(mapProductForFrontend));
+});
+
+const getTrendingProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find({ status: "approved" })
+    .sort({ updatedAt: -1 })
+    .limit(5);
+  res.json(products.map(mapProductForFrontend));
+});
+
+const getPendingProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find({ status: "pending" });
+  res.json(products.map(mapProductForFrontend));
+});
+
 const createProduct = asyncHandler(async (req, res) => {
   const { name, brand, barcode } = req.body;
-
-  if (!name || !brand || !barcode) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
+  if (!name || !barcode) return res.status(400).json({ message: "Name & barcode required" });
 
   const exists = await Product.findOne({ barcode });
-  if (exists) {
-    return res.status(400).json({ message: "Product already exists" });
-  }
+  if (exists) return res.status(400).json({ message: "Product already exists" });
 
-  const imagePath = req.file
-    ? "/" + req.file.path.replace(/\\/g, "/")
-    : "/uploads/placeholder.png";
-
-  const newProduct = await Product.create({
+  const product = await Product.create({
     product_name: name,
-    product_brand: brand,
+    product_brand: brand || "Unknown",
     barcode,
-    image_url: imagePath,
-    submittedBy: req.user?._id || null,
     status: "pending",
   });
-
-  res.status(201).json(newProduct);
+  res.status(201).json(mapProductForFrontend(product));
 });
 
-/* -------------------------------------------------------
-   TRENDING PRODUCTS
-------------------------------------------------------- */
-const getTrendingProducts = asyncHandler(async (req, res) => {
-  logger.info("Trending products requested");
-
-  const products = await Product.find({ status: "approved" }).limit(4);
-
-  // Use the mapper to ensure frontend gets correct camelCase format
-  return res.json(products.map(mapProductForFrontend));
-});
-
-/* -------------------------------------------------------
-   ADMIN: UPDATE PRODUCT
-------------------------------------------------------- */
 const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
-
   if (!product) return res.status(404).json({ message: "Product not found" });
 
   product.product_name = req.body.name || product.product_name;
   product.product_brand = req.body.brand || product.product_brand;
-  product.ingredients = req.body.ingredients || product.ingredients;
-  product.calories = req.body.calories || product.calories;
-  // Add other fields as necessary for admin updates
-
-  // Re-run analysis on update
-  const mapped = mapProductForFrontend(product);
-  const analyzed = performHealthAnalysis(mapped);
-
-  product.nutriScore = analyzed.nutriScore;
-  product.rating = analyzed.rating;
-  product.remarks = analyzed.warnings.join("; ");
+  product.status = req.body.status || product.status;
 
   const updated = await product.save();
-
-  res.json(updated);
+  res.json(mapProductForFrontend(updated));
 });
 
-/* -------------------------------------------------------
-   ADMIN: PENDING PRODUCTS
-------------------------------------------------------- */
-const getPendingProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({ status: "pending" });
-  res.json(products);
-});
-
-/* -------------------------------------------------------
-   ADMIN: REJECT PRODUCT
-------------------------------------------------------- */
 const rejectProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
-
   if (!product) return res.status(404).json({ message: "Product not found" });
 
   await product.deleteOne();
-
-  res.json({ message: "Product deleted" });
+  res.json({ message: "Product removed" });
 });
 
-/* -------------------------------------------------------
-   EXPORT
-------------------------------------------------------- */
+const searchProducts = asyncHandler(async (req, res) => {
+  const keyword = req.query.keyword
+    ? { product_name: { $regex: req.query.keyword, $options: "i" } } 
+    : {};
+
+  const products = await Product.find({ ...keyword }).limit(10);
+  res.json(products.map(mapProductForFrontend));
+});
+
+const getHealthyAlternatives = asyncHandler(async (req, res) => {
+  const alternatives = await Product.find({
+    nutriScore: { $in: ['A', 'B'] },
+    status: "approved"
+  }).limit(4);
+
+  res.json(alternatives.map(mapProductForFrontend));
+});
+
+const askProductAI = asyncHandler(async (req, res) => {
+  const { barcode } = req.params;
+  const { question } = req.body;
+
+  if (!question) return res.status(400).json({ message: "Bhai, question toh bhej!" });
+
+  const product = await Product.findOne({ barcode });
+  if (!product) return res.status(404).json({ message: "Product not found" });
+
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `You are a strict, highly knowledgeable health and nutrition expert named 'Tattvam AI'. 
+    The user is asking a question about the following product:
+    
+    Name: ${product.product_name}
+    Brand: ${product.product_brand}
+    Ingredients: ${product.ingredients}
+    Nutritional Info (per 100g): Calories: ${product.calories}, Sugar: ${product.sugar_content_g}g, Fat: ${product.fat_content_g}g, Sodium: ${product.sodium_mg}mg.
+    Nutri-Score Grade: ${product.nutriScore} (A is best, E is worst).
+
+    User's Question: "${question}"
+
+    Please provide a short, clear, and highly scientific answer (max 3-4 sentences). Be honest if the product is unhealthy. Do not use complex markdown formatting like ** or *, keep it plain readable text.`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+    res.json({ answer: text });
+  } catch (error) {
+    console.error("AI Error:", error);
+    res.status(500).json({ message: "AI thoda busy hai, baad mein try karo." });
+  }
+});
+
 export {
+  getProducts,
   getProductByBarcode,
-  createProduct,
   getTrendingProducts,
-  updateProduct,
   getPendingProducts,
+  createProduct,
+  updateProduct,
   rejectProduct,
+  searchProducts,
+  getHealthyAlternatives,
+  askProductAI,
 };

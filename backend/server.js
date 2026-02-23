@@ -1,7 +1,10 @@
 // backend/server.js
 
-import express from "express";
 import dotenv from "dotenv";
+// ✅ BUG FIX: dotenv ko sabse upar load karna zaroori hai, taaki baaki files ko env variables mil sakein
+dotenv.config();
+
+import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,9 +16,6 @@ import userRoutes from "./routes/userRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import scanRoutes from "./routes/scanRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-
-// LOAD ENV
-dotenv.config();
 
 // CONNECT DATABASE
 connectDB();
@@ -32,7 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ STATIC IMAGE SERVING (CRITICAL FOR YOUR ISSUE)
+// ✅ STATIC IMAGE SERVING
 const uploadsPath = path.join(__dirname, "uploads");
 app.use("/uploads", express.static(uploadsPath));
 
@@ -47,7 +47,8 @@ app.use("/api/admin", adminRoutes);
 
 // ROOT
 app.get("/", (req, res) => {
-  res.send("✅ NutriNew API is running successfully...");
+  // ✅ UPDATE: Naam update kar diya Tattvam ke hisaab se
+  res.send("✅ Tattvam API is running successfully...");
 });
 
 // ERROR HANDLERS
