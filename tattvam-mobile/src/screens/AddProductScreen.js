@@ -31,7 +31,7 @@ export default function AddProductScreen() {
       const userInfo = userInfoString ? JSON.parse(userInfoString) : null;
       const token = userInfo?.token || '';
 
-      const res = await fetch('https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products', {
+      const res = await fetch('https://tattvam-app.onrender.com/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

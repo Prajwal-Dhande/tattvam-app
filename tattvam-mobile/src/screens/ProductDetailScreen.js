@@ -139,7 +139,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   useEffect(() => {
     if (needsHealthier) {
       setLoadingAlts(true);
-      fetch('https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products/alternatives')
+      fetch('https://tattvam-app.onrender.com/api/products/alternatives')
         .then(res => res.json())
         .then(data => {
           setAlternatives(data.filter(item => item.barcode !== p?.barcode));
@@ -174,7 +174,7 @@ export default function ProductDetailScreen({ route, navigation }) {
 
       const finalQuestion = personaString + "Product: " + p?.name + ". Question: " + userMessage;
 
-      const res = await fetch(`https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products/${p.barcode}/ask`, {
+      const res = await fetch(`https://tattvam-app.onrender.com/api/products/${p.barcode}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: finalQuestion })

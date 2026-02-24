@@ -59,7 +59,7 @@ export default function ScannerScreen() {
   const fetchProductData = async (barcode) => {
     setLoading(true);
     try {
-      const res = await fetch(`https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products/${barcode}`);
+      const res = await fetch(`https://tattvam-app.onrender.com/api/products/${barcode}`);
       const data = await res.json();
       
       setLoading(false);

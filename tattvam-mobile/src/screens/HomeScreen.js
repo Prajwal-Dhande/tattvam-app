@@ -62,7 +62,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const fetchRealTrendingProducts = async () => {
       try {
-        const res = await fetch('https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products');
+        const res = await fetch('https://tattvam-app.onrender.com/api/products');
         if (res.ok) {
           const data = await res.json();
           if (data.length > 0) setTrendingProducts(data.reverse().slice(0, 5));
@@ -93,7 +93,7 @@ export default function HomeScreen() {
       setShowSuggestions(true);
 
       try {
-        const res = await fetch(`https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products/search?keyword=${query}`);
+        const res = await fetch(`https://tattvam-app.onrender.com/api/products/search?keyword=${query}`);
         if (res.ok) {
           const data = await res.json();
           setSuggestions(data);
@@ -117,7 +117,7 @@ export default function HomeScreen() {
     if (!query) return;
 
     if (/^\d+$/.test(query)) {
-      fetch(`https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products/${query}`)
+      fetch(`https://tattvam-app.onrender.com/api/products/${query}`)
         .then(res => res.json())
         .then(data => {
           if(data.message) Alert.alert("Not Found", "Product nahi mila.");

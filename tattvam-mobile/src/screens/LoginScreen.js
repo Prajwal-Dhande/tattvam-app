@@ -28,7 +28,7 @@ export default function LoginScreen() {
       const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
       const payload = isLogin ? { email, password } : { name, email, password };
 
-      const response = await fetch(`https://nonpapistical-prohibitively-dulcie.ngrok-free.dev${endpoint}`, {
+      const response = await fetch(`https://tattvam-app.onrender.com${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

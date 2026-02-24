@@ -15,7 +15,7 @@ export default function SearchResultsScreen() {
     const fetchResults = async () => {
       try {
         // Asli DB se text search kar rahe hain
-        const res = await fetch(`https://nonpapistical-prohibitively-dulcie.ngrok-free.dev/api/products/search?keyword=${query}`);
+        const res = await fetch(`https://tattvam-app.onrender.com/api/products/search?keyword=${query}`);
         if (res.ok) {
           const data = await res.json();
           setResults(data);
