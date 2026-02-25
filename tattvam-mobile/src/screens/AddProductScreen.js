@@ -11,7 +11,7 @@ export default function AddProductScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   
-  // Scanner screen se barcode automatically yahan aayega
+  // Barcode will automatically populate from the scanner screen
   const initialBarcode = route.params?.barcode || '';
 
   const [barcode, setBarcode] = useState(initialBarcode);
@@ -21,7 +21,7 @@ export default function AddProductScreen() {
 
   const handleSubmit = async () => {
     if (!name.trim() || !barcode.trim()) {
-      Alert.alert('Incomplete', 'Bhai, Product Name aur Barcode daalna zaroori hai!');
+      Alert.alert('Incomplete', 'Please provide both the Product Name and Barcode.');
       return;
     }
 
@@ -49,15 +49,15 @@ export default function AddProductScreen() {
       if (res.ok) {
         Alert.alert(
           'Success! 🎉', 
-          'Product database mein chala gaya hai (Pending Approval). Tattvam team jald iska NutriScore update karegi!',
+          'The product has been successfully added to the database (Pending Approval). The Tattvam team will update its NutriScore shortly!',
           // ✅ FIX: Correct Nested Navigation Path
           [{ text: 'Awesome', onPress: () => navigation.navigate('MainTabs', { screen: 'Home' }) }]
         );
       } else {
-        Alert.alert('Error', data.message || 'Kuch gadbad ho gayi.');
+        Alert.alert('Error', data.message || 'Something went wrong. Please try again.');
       }
     } catch (error) {
-      Alert.alert('Connection Error', 'Server se connect nahi ho paya.');
+      Alert.alert('Connection Error', 'Unable to connect to the server. Please check your network.');
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ export default function AddProductScreen() {
             <FontAwesome5 name="box-open" size={50} color="#00C897" />
           </View>
           <Text style={styles.title}>Help the Community!</Text>
-          <Text style={styles.subtitle}>Yeh product abhi Tattvam par nahi hai. Iski details daal kar baaki logo ki madad karein.</Text>
+          <Text style={styles.subtitle}>This product is not yet in the Tattvam database. Add its details to help others.</Text>
 
           {/* Form */}
           <View style={styles.formCard}>
@@ -94,7 +94,7 @@ export default function AddProductScreen() {
                 onChangeText={setBarcode}
                 keyboardType="numeric"
                 placeholder="e.g. 8901058002364"
-                editable={!initialBarcode} // Agar scan hoke aaya hai toh edit mat karne do
+                editable={!initialBarcode} // Prevent editing if the barcode was scanned
               />
             </View>
 

@@ -6,7 +6,7 @@ import {
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ✅ SMART DICTIONARY: Inko dekhte hi app automatically RED (Unhealthy) mark karegi
+// ✅ SMART DICTIONARY: The app will automatically flag these ingredients as RED (Unhealthy)
 const DANGEROUS_INGREDIENTS = [
   'palm', 'palmolein', 'sugar', 'syrup', 'glucose', 'fructose', 'maltodextrin', 
   'refined wheat flour', 'maida', 'interesterified', 'hydrogenated', 'artificial', 
@@ -185,7 +185,7 @@ export default function ProductDetailScreen({ route, navigation }) {
       if (data.answer) {
         setChatHistory(prev => [...prev, { role: 'ai', text: data.answer }]);
       } else {
-        setChatHistory(prev => [...prev, { role: 'ai', text: "Oops, backend se response nahi aaya." }]);
+        setChatHistory(prev => [...prev, { role: 'ai', text: "Sorry, I couldn't reach the server. Please try again in a moment." }]);
       }
     } catch (error) {
       setChatHistory(prev => [...prev, { role: 'ai', text: "Connection error. Please check your internet or local server." }]);

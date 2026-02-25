@@ -48,9 +48,9 @@ export default function OnboardingScreen() {
 
   const completeOnboarding = async () => {
     try {
-      // User ne onboarding dekh li hai, ye save kar lo
+      // Save the state indicating the user has completed onboarding
       await AsyncStorage.setItem('hasOnboarded', 'true');
-      navigation.replace('Login'); // Uske baad direct login pe bhejo
+      navigation.replace('Login'); // Redirect the user directly to the Login screen
     } catch (error) {
       console.log('Error saving onboarding status:', error);
     }
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   bottomContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 30, paddingBottom: Platform.OS === 'ios' ? 40 : 30, height: 100 },
   indicatorContainer: { flexDirection: 'row', alignItems: 'center' },
   indicator: { height: 8, width: 8, borderRadius: 4, backgroundColor: '#e2e8f0', marginHorizontal: 4 },
-  indicatorActive: { width: 20, backgroundColor: '#00C897' }, // Lamba wala active dot
+  indicatorActive: { width: 20, backgroundColor: '#00C897' }, // Elongated style for the active indicator
   
   button: { flexDirection: 'row', backgroundColor: '#00C897', paddingVertical: 15, paddingHorizontal: 25, borderRadius: 25, alignItems: 'center', shadowColor: '#00C897', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 }

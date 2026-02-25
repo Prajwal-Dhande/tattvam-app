@@ -30,11 +30,11 @@ export default function ScannerScreen() {
     })();
   }, []);
 
-  // ✅ FIX: Laser ab kabhi freeze nahi hoga! Proper reset logic lagaya hai
+  // ✅ FIXED: Prevent laser animation freeze with proper reset logic
   useEffect(() => {
-    // Laser tabhi chalegi jab focus ho, scan na hua ho, loading na ho, aur modal band ho
+    // Trigger laser animation only when focused, not scanned, not loading, and modal is closed
     if (isFocused && !scanned && !loading && !manualModal) {
-      laserAnim.setValue(0); // Pehle reset karo taaki atak ke na reh jaye
+      laserAnim.setValue(0); // Reset animation value first to prevent getting stuck
       Animated.loop(
         Animated.sequence([
           Animated.timing(laserAnim, {
@@ -72,7 +72,7 @@ export default function ScannerScreen() {
         // ✅ NEW: Navigate to AddProduct if not found
         Alert.alert(
           "Product Not Found 🕵️‍♂️", 
-          "Yeh product humare database mein nahi hai. Kya aap isko add karna chahenge?",
+          "This product is not in our database yet. Would you like to add it and help the community?",
           [
             { text: "Cancel", style: "cancel", onPress: () => setScanned(false) },
             { 
@@ -87,11 +87,11 @@ export default function ScannerScreen() {
       }
     } catch (error) {
       setLoading(false);
-      // ✅ FIX: Proper Alert use kiya, aur 'OK' dabane ke BAAD rescan allow kiya
+      // ✅ FIXED: Proper Alert implementation, allowing rescan only AFTER dismissing
       Alert.alert(
         "Connection Error", 
-        "Server se connect nahi ho paya. IP address ya backend check karo.",
-        [{ text: "OK", onPress: () => setScanned(false) }] // Dismiss hone par hi scan wapas on hoga
+        "Unable to connect to the server. Please check your internet connection or backend status.",
+        [{ text: "OK", onPress: () => setScanned(false) }] // Resume scanning only upon dismissal
       );
     }
   };
@@ -104,7 +104,7 @@ export default function ScannerScreen() {
 
   const handleManualSubmit = () => {
     if (manualBarcode.trim().length < 3) {
-      Alert.alert("Invalid", "Enter a valid barcode!");
+      Alert.alert("Invalid Input", "Please enter a valid barcode number!");
       return;
     }
     fetchProductData(manualBarcode.trim());

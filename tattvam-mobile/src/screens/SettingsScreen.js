@@ -63,12 +63,12 @@ export default function SettingsScreen() {
   const handleRateUs = () => {
     // Dummy Play Store Link format
     Linking.openURL('market://details?id=com.tattvam.app').catch(() => {
-      Alert.alert("Play Store", "Play Store is not available on this emulator/device.");
+      Alert.alert("Play Store Error", "The Google Play Store is not available on this device.");
     });
   };
 
   const openLink = (url) => {
-    Linking.openURL(url).catch(() => Alert.alert("Error", "Could not open the link."));
+    Linking.openURL(url).catch(() => Alert.alert("Error", "Could not open the requested link."));
   };
 
   const handleLogout = () => {
@@ -85,7 +85,7 @@ export default function SettingsScreen() {
     ]);
   };
 
-  // ✅ FIXED: Asli Delete Account Logic
+  // ✅ FIXED: Permanent Account Deletion Logic
   const handleDeleteAccount = () => {
     Alert.alert(
       "Delete Account", 
@@ -97,12 +97,12 @@ export default function SettingsScreen() {
           style: "destructive", 
           onPress: async () => {
             try {
-              // Asli data wipe
+              // Perform complete local data wipe
               await AsyncStorage.multiRemove([
                 'userInfo', 'tattvam_history', 'tattvam_favorites', 'tattvam_prefs'
               ]);
-              Alert.alert("Account Deleted", "Your account has been successfully removed.");
-              navigation.replace('Login'); // Seedha login page pe
+              Alert.alert("Account Deleted", "Your account and data have been successfully removed.");
+              navigation.replace('Login'); // Redirect to login screen
             } catch(e) { console.log(e); }
           } 
         }

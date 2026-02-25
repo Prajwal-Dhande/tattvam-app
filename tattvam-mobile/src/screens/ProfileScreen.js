@@ -19,7 +19,7 @@ export default function ProfileScreen() {
   const [diet, setDiet] = useState('None');
   const [allergies, setAllergies] = useState([]);
   
-  // ✅ FIXED: Wapas add kar di ye dono lines (Yehi gayab ho gayi thi!)
+  // ✅ FIXED: Restored these state variables (They were accidentally removed previously!)
   const [dietModal, setDietModal] = useState(false);
   const [allergyModal, setAllergyModal] = useState(false);
   

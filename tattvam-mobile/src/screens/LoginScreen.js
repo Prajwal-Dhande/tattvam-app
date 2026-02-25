@@ -18,7 +18,7 @@ export default function LoginScreen() {
 
   const handleAuth = async () => {
     if (!email || !password || (!isLogin && !name)) {
-      alert("Bhai, saari details dhang se bhar!");
+      alert("Please fill in all the details correctly.");
       return;
     }
     
@@ -49,7 +49,7 @@ export default function LoginScreen() {
     } catch (error) {
       console.error("Auth Error:", error);
       setLoading(false);
-      alert("Server se connect nahi ho raha. Apna Backend chalu hai na?");
+      alert("Unable to connect to the server. Please check your network connection.");
     }
   };
 

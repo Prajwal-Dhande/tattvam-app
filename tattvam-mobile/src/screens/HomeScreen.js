@@ -120,10 +120,10 @@ export default function HomeScreen() {
       fetch(`https://tattvam-app.onrender.com/api/products/${query}`)
         .then(res => res.json())
         .then(data => {
-          if(data.message) Alert.alert("Not Found", "Product nahi mila.");
+          if(data.message) Alert.alert("Not Found", "Product not found in the database.");
           else navigation.navigate('ProductDetail', { product: data });
         })
-        .catch(() => Alert.alert("Error", "Server se connect nahi ho raha."));
+        .catch(() => Alert.alert("Connection Error", "Unable to connect to the server. Please check your network."));
     } else {
       setShowSuggestions(false);
       navigation.navigate('SearchResults', { query: query });
@@ -145,7 +145,7 @@ export default function HomeScreen() {
               <Text style={styles.subTitle}>Eat Smart, Live Better</Text>
               <Text style={styles.brandTitle}>Tattvam</Text>
             </View>
-            {/* ✅ FIXED: Alert hata kar Asli Navigation laga diya */}
+            {/* ✅ FIXED: Replaced alert with actual Navigation */}
             <TouchableOpacity 
               style={styles.notificationBtn} 
               onPress={() => navigation.navigate('Notifications')}

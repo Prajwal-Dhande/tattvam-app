@@ -12,7 +12,7 @@ export default function HistoryScreen() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Jab bhi History tab khule, data refresh hoga
+  // Refresh data whenever the History tab is opened
   useFocusEffect(
     useCallback(() => {
       loadHistory();
@@ -53,7 +53,7 @@ export default function HistoryScreen() {
     );
   };
 
-  // ✅ NAYA FEATURE: Single Item Delete
+  // ✅ NEW FEATURE: Single Item Delete
   const deleteSingleItem = async (barcode) => {
     try {
       const newHistory = history.filter(item => item.barcode !== barcode);

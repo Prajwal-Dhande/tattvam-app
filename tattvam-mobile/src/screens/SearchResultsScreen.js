@@ -6,7 +6,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 export default function SearchResultsScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { query } = route.params; // HomeScreen se jo type kiya wo yahan aayega
+  const { query } = route.params; // The typed search query from HomeScreen is received here
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +14,7 @@ export default function SearchResultsScreen() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        // Asli DB se text search kar rahe hain
+        // Performing a text search query directly against the production database
         const res = await fetch(`https://tattvam-app.onrender.com/api/products/search?keyword=${query}`);
         if (res.ok) {
           const data = await res.json();
@@ -78,8 +78,8 @@ export default function SearchResultsScreen() {
         ) : (
           <View style={styles.emptyContainer}>
             <FontAwesome5 name="search" size={50} color="#cbd5e1" style={{ marginBottom: 20 }} />
-            <Text style={styles.emptyText}>Bhai, "{query}" naam se kuch nahi mila DB mein.</Text>
-            <Text style={styles.emptySubText}>Scan button daba aur khud naya product add kar de!</Text>
+            <Text style={styles.emptyText}>No products found for "{query}".</Text>
+            <Text style={styles.emptySubText}>Use the scanner to add this product and help the community!</Text>
           </View>
         )}
       </View>
