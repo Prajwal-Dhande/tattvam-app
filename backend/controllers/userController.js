@@ -68,13 +68,18 @@ const registerUser = asyncHandler(async (req, res) => {
     });
   }
 
-  // --- NODEMAILER SETUP (Moved inside the function to get .env values properly) ---
+  // ✅ FIXED: Updated NODEMAILER SETUP to bypass Render's IPv6 blocking
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL
     auth: {
       user: process.env.EMAIL_USER, 
       pass: process.env.EMAIL_PASS, 
     },
+    tls: {
+      rejectUnauthorized: false // Helps avoid cert errors on free tier servers
+    }
   });
 
   // --- SEND EMAIL ---
