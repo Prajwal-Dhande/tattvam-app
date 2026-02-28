@@ -3,7 +3,7 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
-import nodemailer from 'nodemailer';
+// nodemailer hata diya, ab hum sidha Google Apps Script use kar rahe hain!
 
 // @desc    Auth user & get token (Login)
 // @route   POST /api/users/login
@@ -68,24 +68,10 @@ const registerUser = asyncHandler(async (req, res) => {
     });
   }
 
-  // ✅ FIXED: Using Port 587 (TLS) to bypass Render's strict Port 465 block
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // 587 ke liye false hona zaroori hai
-    requireTLS: true, // Force TLS
-    auth: {
-      user: process.env.EMAIL_USER, 
-      pass: process.env.EMAIL_PASS, 
-    },
-    tls: {
-      rejectUnauthorized: false // Helps avoid cert errors on free tier servers
-    }
-  });
+  // ✅ THE BRAHMASTRA: HTTP Request via Google Apps Script (Bypassing Render SMTP Block)
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbwpvMNf5Qu25K1h3pN13bxN96qpJJY7fYY3xaAaF14jdcNQXWdsn6mwTd9Lw2g73i0TRw/exec"; 
 
-  // --- SEND EMAIL ---
-  const mailOptions = {
-    from: `"Tattvam AI" <${process.env.EMAIL_USER}>`,
+  const emailData = {
     to: email,
     subject: 'Your Tattvam Verification Code',
     html: `
@@ -95,16 +81,20 @@ const registerUser = asyncHandler(async (req, res) => {
         <h1 style="color: #00C897; letter-spacing: 5px;">${otp}</h1>
         <p>This code will expire in 10 minutes.</p>
       </div>
-    `,
+    `
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log('Error sending email:', error);
-    } else {
-      console.log('Email sent:', info.response);
-    }
-  });
+  try {
+    // Google ke server ko sidha order de rahe hain mail bhejne ka
+    await fetch(scriptUrl, {
+      method: 'POST',
+      body: JSON.stringify(emailData),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    console.log('✅ Email sent via Google Apps Script (Bypassed Render!)');
+  } catch (error) {
+    console.log('❌ Error sending email:', error);
+  }
 
   res.status(201).json({ message: 'OTP has been sent to your email.' });
 });
