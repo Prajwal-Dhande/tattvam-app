@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, 
-  SafeAreaView, Modal, Platform, TextInput 
+  SafeAreaView, Modal, Platform, TextInput, KeyboardAvoidingView 
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,7 +19,7 @@ export default function ProfileScreen() {
   const [diet, setDiet] = useState('None');
   const [allergies, setAllergies] = useState([]);
   
-  // ✅ FIXED: Restored these state variables (They were accidentally removed previously!)
+  // Modal States
   const [dietModal, setDietModal] = useState(false);
   const [allergyModal, setAllergyModal] = useState(false);
   
@@ -221,6 +221,7 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.menuItem} onPress={() => setAllergyModal(true)}>
             <View style={[styles.menuIcon, {backgroundColor: '#ffedd5'}]}><FontAwesome5 name="hand-paper" size={16} color="#ea580c" /></View>
             <View style={{flex: 1}}><Text style={styles.menuText}>Allergies & Intolerances</Text></View>
+            <Text style={styles.menuValue}></Text>
             {allergies.length > 0 && <View style={styles.allergyDot}><Text style={styles.allergyDotText}>{allergies.length}</Text></View>}
             <FontAwesome5 name="chevron-right" size={14} color="#cbd5e1" />
           </TouchableOpacity>
@@ -232,10 +233,13 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* ======================================================= */}
-      {/* ✏️ 1. EDIT PROFILE MODAL */}
+      {/* ✏️ 1. EDIT PROFILE MODAL (FIXED KEYBOARD OVERLAP) */}
       {/* ======================================================= */}
       <Modal visible={editModalVisible} transparent animationType="fade" onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          style={styles.modalOverlay}
+        >
           <View style={[styles.smallModalContent, { paddingBottom: 25 }]}>
             <Text style={styles.modalTitle}>Edit Your Name</Text>
             <TextInput 
@@ -254,7 +258,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ======================================================= */}

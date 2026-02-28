@@ -274,7 +274,12 @@ export default function SettingsScreen() {
                 <Text style={styles.devTitle}>DESIGNED & DEVELOPED BY</Text>
                 <Text style={styles.devName}>Prajwal Dhande</Text>
                 <Text style={styles.devRole}>AI Engineer • Nagpur, India</Text>
-                <TouchableOpacity style={styles.contactBtn} onPress={handleSupportEmail}>
+                
+                {/* ✅ FIXED: Now points directly to your portfolio */}
+                <TouchableOpacity 
+                  style={styles.contactBtn} 
+                  onPress={() => openLink('https://prajwal-dhande.netlify.app/')}
+                >
                   <Text style={styles.contactBtnText}>Get in Touch</Text>
                 </TouchableOpacity>
               </View>

@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // ✅ Added AsyncStorage
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +42,9 @@ export default function HomeScreen() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
+  // ✅ NEW STATE: To control the red notification dot
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+
   const dummyTrendingProducts = [
     { 
       barcode: "8901058002364", name: "Maggi Masala", brand: "NESTLE", nutriScore: "D", 
@@ -58,6 +62,21 @@ export default function HomeScreen() {
       nutrition: { calories: 508, protein: 6.7, carbs: 68, fat: 23 }
     }
   ];
+
+  // Check notification status on load
+  useEffect(() => {
+    const checkNotifications = async () => {
+      try {
+        const readStatus = await AsyncStorage.getItem('notifications_read');
+        if (readStatus === 'true') {
+          setHasUnreadNotifications(false);
+        }
+      } catch (error) {
+        console.log("Error reading notification status", error);
+      }
+    };
+    checkNotifications();
+  }, []);
 
   useEffect(() => {
     const fetchRealTrendingProducts = async () => {
@@ -130,6 +149,17 @@ export default function HomeScreen() {
     }
   };
 
+  // ✅ NEW FUNCTION: Handle Bell Click
+  const handleBellClick = async () => {
+    setHasUnreadNotifications(false); // Hide the red dot immediately
+    try {
+      await AsyncStorage.setItem('notifications_read', 'true'); // Save state to memory
+    } catch (error) {
+      console.log(error);
+    }
+    navigation.navigate('Notifications'); // Go to notifications screen
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView 
@@ -145,13 +175,14 @@ export default function HomeScreen() {
               <Text style={styles.subTitle}>Eat Smart, Live Better</Text>
               <Text style={styles.brandTitle}>Tattvam</Text>
             </View>
-            {/* ✅ FIXED: Replaced alert with actual Navigation */}
+            
+            {/* ✅ FIXED: Updated onPress and dynamically rendered the red dot */}
             <TouchableOpacity 
               style={styles.notificationBtn} 
-              onPress={() => navigation.navigate('Notifications')}
+              onPress={handleBellClick}
             >
               <FontAwesome5 name="bell" size={24} color="white" />
-              <View style={styles.notificationDot} />
+              {hasUnreadNotifications && <View style={styles.notificationDot} />}
             </TouchableOpacity>
           </View>
 

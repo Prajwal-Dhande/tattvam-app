@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   View, Text, StyleSheet, TextInput, TouchableOpacity, 
-  SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert 
+  SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, ScrollView 
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -65,18 +65,25 @@ export default function AddProductScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <FontAwesome5 name="arrow-left" size={20} color="#1e293b" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add New Product</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      {/* Header (Kept outside KeyboardAvoidingView so it stays fixed at top) */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <FontAwesome5 name="arrow-left" size={20} color="#1e293b" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Add New Product</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-        <View style={styles.container}>
+      {/* ✅ FIXED: Added ScrollView inside KeyboardAvoidingView */}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+        style={{ flex: 1, backgroundColor: '#F8FAFC' }}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled" // Important: Allows tapping outside to close keyboard
+        >
           <View style={styles.iconWrapper}>
             <FontAwesome5 name="box-open" size={50} color="#00C897" />
           </View>
@@ -131,8 +138,10 @@ export default function AddProductScreen() {
               </>
             )}
           </TouchableOpacity>
-        </View>
-
+          
+          {/* Added some padding at bottom so scroll reaches slightly above keyboard */}
+          <View style={{ height: 40 }} />
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -140,11 +149,12 @@ export default function AddProductScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'white' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, paddingTop: Platform.OS === 'android' ? 40 : 10, backgroundColor: 'white' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, paddingTop: Platform.OS === 'android' ? 40 : 10, backgroundColor: 'white', zIndex: 10 },
   backBtn: { width: 40, height: 40, backgroundColor: '#f1f5f9', borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1e293b' },
   
-  container: { flex: 1, padding: 20, backgroundColor: '#F8FAFC' },
+  scrollContent: { padding: 20, paddingBottom: 40 }, // Changed container to scrollContent
+  
   iconWrapper: { alignSelf: 'center', width: 100, height: 100, backgroundColor: '#e0f8f1', borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 20, marginTop: 10 },
   title: { fontSize: 24, fontWeight: '900', color: '#1e293b', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 30, paddingHorizontal: 10, lineHeight: 22 },

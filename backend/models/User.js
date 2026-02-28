@@ -19,19 +19,28 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // --- ROLE FIELD ---
     role: {
       type: String,
       required: true,
       enum: ['user', 'admin'],
       default: 'user',
     },
-    // --- DAILY GOALS ---
     goals: {
       dailyCalories: { type: Number, default: 2000 },
       dailyProtein: { type: Number, default: 150 },
       dailyCarbs: { type: Number, default: 250 },
       dailyFat: { type: Number, default: 70 },
+    },
+    // --- NEW FIELDS FOR OTP VERIFICATION ---
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    otp: {
+      type: String,
+    },
+    otpExpires: {
+      type: Date,
     },
   },
   {
@@ -53,8 +62,5 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// --- CREATE MODEL ---
 const User = mongoose.model('User', userSchema);
-
-// --- EXPORT DEFAULT (for ES Modules) ---
 export default User;

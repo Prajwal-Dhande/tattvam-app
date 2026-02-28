@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   View, Text, StyleSheet, TextInput, TouchableOpacity, 
-  KeyboardAvoidingView, Platform, SafeAreaView, ActivityIndicator
+  KeyboardAvoidingView, Platform, SafeAreaView, ActivityIndicator, Modal, Alert
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +16,11 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); 
 
+  // OTP States
+  const [otpModalVisible, setOtpModalVisible] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+
   const handleAuth = async () => {
     if (!email || !password || (!isLogin && !name)) {
       alert("Please fill in all the details correctly.");
@@ -28,6 +33,7 @@ export default function LoginScreen() {
       const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
       const payload = isLogin ? { email, password } : { name, email, password };
 
+      // ✅ FIXED: Reverted back to Live Render URL
       const response = await fetch(`https://tattvam-app.onrender.com${endpoint}`, {
         method: 'POST',
         headers: {
@@ -37,13 +43,19 @@ export default function LoginScreen() {
       });
 
       const data = await response.json();
+      setLoading(false);
 
       if (response.ok) {
-        await AsyncStorage.setItem('userInfo', JSON.stringify(data));
-        setLoading(false);
-        navigation.replace('MainTabs'); 
+        if (isLogin) {
+           // Direct login
+          await AsyncStorage.setItem('userInfo', JSON.stringify(data));
+          navigation.replace('MainTabs'); 
+        } else {
+          // Registration successful, OTP sent. Open Modal.
+          Alert.alert("Success", "An OTP has been sent to your email!");
+          setOtpModalVisible(true);
+        }
       } else {
-        setLoading(false);
         alert(data.message || 'Authentication failed. Please try again.');
       }
     } catch (error) {
@@ -53,6 +65,40 @@ export default function LoginScreen() {
     }
   };
 
+  const verifyOtp = async () => {
+    if(!otpCode || otpCode.length < 6) {
+        alert("Please enter a valid 6-digit OTP.");
+        return;
+    }
+
+    setOtpLoading(true);
+    try {
+        // ✅ FIXED: Reverted back to Live Render URL
+        const response = await fetch(`https://tattvam-app.onrender.com/api/users/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp: otpCode }),
+        });
+
+        const data = await response.json();
+        setOtpLoading(false);
+
+        if(response.ok) {
+            // OTP verified, save user info and login
+            setOtpModalVisible(false);
+            await AsyncStorage.setItem('userInfo', JSON.stringify(data));
+            navigation.replace('MainTabs');
+        } else {
+            alert(data.message || "Invalid OTP. Please try again.");
+        }
+
+    } catch(error) {
+        console.error("OTP Error:", error);
+        setOtpLoading(false);
+        alert("Network Error. Please try again.");
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
@@ -61,7 +107,6 @@ export default function LoginScreen() {
       >
         <View style={styles.headerContainer}>
           <View style={styles.logoCircle}>
-            {/* ✅ FIXED: Changed color from "white" to "#00C897" */}
             <FontAwesome5 name="leaf" size={40} color="#00C897" />
           </View>
           <Text style={styles.brandTitle}>Tattvam</Text>
@@ -140,6 +185,43 @@ export default function LoginScreen() {
         </View>
 
       </KeyboardAvoidingView>
+
+      {/* ======================================================= */}
+      {/* 🔐 OTP VERIFICATION MODAL */}
+      {/* ======================================================= */}
+      <Modal visible={otpModalVisible} transparent animationType="slide">
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+            <View style={styles.otpModalContent}>
+                <View style={styles.otpIconBox}>
+                    <FontAwesome5 name="envelope-open-text" size={30} color="#00C897" />
+                </View>
+                <Text style={styles.otpTitle}>Verify Your Email</Text>
+                <Text style={styles.otpSubtitle}>
+                    We've sent a 6-digit code to <Text style={{fontWeight: 'bold', color: '#1e293b'}}>{email}</Text>. Please enter it below.
+                </Text>
+
+                <TextInput 
+                    style={styles.otpInput}
+                    placeholder="Enter 6-digit OTP"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    maxLength={6}
+                    value={otpCode}
+                    onChangeText={setOtpCode}
+                    textAlign="center"
+                />
+
+                <TouchableOpacity style={styles.verifyBtn} onPress={verifyOtp} disabled={otpLoading}>
+                    {otpLoading ? <ActivityIndicator color="white" /> : <Text style={styles.verifyBtnText}>Verify & Login</Text>}
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.cancelOtpBtn} onPress={() => setOtpModalVisible(false)}>
+                    <Text style={styles.cancelOtpText}>Cancel</Text>
+                </TouchableOpacity>
+            </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -172,5 +254,17 @@ const styles = StyleSheet.create({
   
   footerContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 30 },
   footerText: { color: 'rgba(255,255,255,0.8)', fontSize: 15, fontWeight: '500' },
-  toggleText: { color: 'white', fontSize: 15, fontWeight: 'bold', textDecorationLine: 'underline' }
+  toggleText: { color: 'white', fontSize: 15, fontWeight: 'bold', textDecorationLine: 'underline' },
+
+  // OTP Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  otpModalContent: { backgroundColor: 'white', width: '100%', borderRadius: 24, padding: 30, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, elevation: 10 },
+  otpIconBox: { width: 70, height: 70, backgroundColor: '#e0f8f1', borderRadius: 35, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  otpTitle: { fontSize: 22, fontWeight: '900', color: '#1e293b', marginBottom: 10 },
+  otpSubtitle: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 25, lineHeight: 22 },
+  otpInput: { width: '100%', backgroundColor: '#f8fafc', height: 60, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', fontSize: 24, fontWeight: 'bold', color: '#1e293b', marginBottom: 20, letterSpacing: 5 },
+  verifyBtn: { width: '100%', backgroundColor: '#00C897', height: 55, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  verifyBtnText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  cancelOtpBtn: { marginTop: 20, padding: 10 },
+  cancelOtpText: { color: '#94a3b8', fontSize: 14, fontWeight: 'bold' }
 });
