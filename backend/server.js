@@ -45,10 +45,10 @@ app.use("/api/products", productRoutes);
 app.use("/api/scans", scanRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ROOT
+// ROOT (✅ HEALTH CHECK FOR CRON-JOB.ORG)
 app.get("/", (req, res) => {
-  // ✅ UPDATE: Naam update kar diya Tattvam ke hisaab se
-  res.send("✅ Tattvam API is running successfully...");
+  // Explicitly sending status 200 so monitoring tools don't fail
+  res.status(200).send("✅ Tattvam API is running successfully... Server is AWAKE! 🚀");
 });
 
 // ERROR HANDLERS
