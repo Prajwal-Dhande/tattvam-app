@@ -68,11 +68,12 @@ const registerUser = asyncHandler(async (req, res) => {
     });
   }
 
-  // ✅ FIXED: Updated NODEMAILER SETUP to bypass Render's IPv6 blocking
+  // ✅ FIXED: Using Port 587 (TLS) to bypass Render's strict Port 465 block
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL
+    port: 587,
+    secure: false, // 587 ke liye false hona zaroori hai
+    requireTLS: true, // Force TLS
     auth: {
       user: process.env.EMAIL_USER, 
       pass: process.env.EMAIL_PASS, 
