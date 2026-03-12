@@ -56,9 +56,10 @@ app.use(notFound);
 app.use(errorHandler);
 
 // START SERVER
+// ✅ FIX: Ab server dynamically usi PORT par chalega jo env mein hai (5000)
 const PORT = process.env.PORT || 5000;
 const ENV = process.env.NODE_ENV || "development";
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${ENV} mode on port ${PORT}`);
+  console.log(`✅ Server is perfectly running on port ${PORT} in ${ENV} mode!`);
 });

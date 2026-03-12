@@ -30,11 +30,10 @@ export default function ScannerScreen() {
     })();
   }, []);
 
-  // ✅ FIXED: Prevent laser animation freeze with proper reset logic
+  // Prevent laser animation freeze with proper reset logic
   useEffect(() => {
-    // Trigger laser animation only when focused, not scanned, not loading, and modal is closed
     if (isFocused && !scanned && !loading && !manualModal) {
-      laserAnim.setValue(0); // Reset animation value first to prevent getting stuck
+      laserAnim.setValue(0); 
       Animated.loop(
         Animated.sequence([
           Animated.timing(laserAnim, {
@@ -56,6 +55,7 @@ export default function ScannerScreen() {
     }
   }, [isFocused, scanned, loading, manualModal, laserAnim]);
 
+  // Normal Barcode Fetch
   const fetchProductData = async (barcode) => {
     setLoading(true);
     try {
@@ -69,7 +69,6 @@ export default function ScannerScreen() {
       if (res.ok) {
         navigation.navigate('ProductDetail', { product: data });
       } else {
-        // ✅ NEW: Navigate to AddProduct if not found
         Alert.alert(
           "Product Not Found 🕵️‍♂️", 
           "This product is not in our database yet. Would you like to add it and help the community?",
@@ -87,11 +86,10 @@ export default function ScannerScreen() {
       }
     } catch (error) {
       setLoading(false);
-      // ✅ FIXED: Proper Alert implementation, allowing rescan only AFTER dismissing
       Alert.alert(
         "Connection Error", 
         "Unable to connect to the server. Please check your internet connection or backend status.",
-        [{ text: "OK", onPress: () => setScanned(false) }] // Resume scanning only upon dismissal
+        [{ text: "OK", onPress: () => setScanned(false) }]
       );
     }
   };
@@ -173,6 +171,7 @@ export default function ScannerScreen() {
               <Text style={styles.manualBtnText}>Type Barcode</Text>
             </TouchableOpacity>
           </View>
+
         </View>
       </View>
 
@@ -231,13 +230,13 @@ const styles = StyleSheet.create({
   
   laser: { width: '100%', height: 3, backgroundColor: '#00C897', shadowColor: '#00C897', shadowOpacity: 0.8, shadowRadius: 10, elevation: 5 },
   
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 16 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 16 },
   loadingText: { color: '#00C897', marginTop: 10, fontWeight: 'bold' },
 
   rescanBtn: { flexDirection: 'row', backgroundColor: '#0f172a', paddingHorizontal: 25, paddingVertical: 12, borderRadius: 25, marginBottom: 20, borderWidth: 1, borderColor: '#334155' },
   rescanText: { color: 'white', fontWeight: 'bold', fontSize: 15 },
 
-  controlsContainer: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 20 },
+  controlsContainer: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 10 },
   iconButton: { width: 55, height: 55, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
   iconButtonActive: { backgroundColor: 'rgba(251, 191, 36, 0.2)', borderWidth: 1, borderColor: '#fbbf24' },
   
