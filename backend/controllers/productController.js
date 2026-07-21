@@ -276,7 +276,7 @@ const askProductAI = asyncHandler(async (req, res) => {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
 
     const prompt = `You are a strict, highly knowledgeable health and nutrition expert named 'Tattvam AI'. 
     The user is asking a question about the following product:

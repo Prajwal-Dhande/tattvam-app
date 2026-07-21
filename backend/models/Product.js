@@ -107,7 +107,7 @@ productSchema.pre('findOneAndUpdate', function(next) {
 });
 
 // Indexes for fast searching
-productSchema.index({ barcode: 1 });
+
 productSchema.index({ product_name: "text" });
 
 const Product = mongoose.model("Product", productSchema);
